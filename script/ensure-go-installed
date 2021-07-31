@@ -1,0 +1,32 @@
+#!/bin/bash
+
+PREFERRED_GO_VERSION=go1.14.4
+SUPPORTED_GO_VERSIONS='go1.1[456]'
+
+export ROOTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"
+cd $ROOTDIR
+
+# If Go isn't installed globally, setup environment variables for local install.
+if [ -z "$(which go)" ] || [ -z "$(go version | grep "$SUPPORTED_GO_VERSIONS")" ]; then
+  GODIR="$ROOTDIR/.vendor/golocal"
+
+  if [ $(uname -s) = "Darwin" ]; then
+    export GOROOT="$GODIR/usr/local/go"
+  else
+    export GOROOT="$GODIR/go"
+  fi
+
+  export PATH="$GOROOT/bin:$PATH"
+fi
+
+# Fail if correct go version still unfound
+if [ -z "$(which go)" ] || [ -z "$(go version | grep "$SUPPORTED_GO_VERSIONS")" ]; then
+  exit 1
+fi
+
+echo "$(go version) found in $GODIR: Go Binary: $(which go)"
+
+cd $ROOTDIR
+
+# Configure the new go to be the first go found
+export GOPATH=$ROOTDIR/.vendor
