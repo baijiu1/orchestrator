@@ -81,3 +81,11 @@ Get started developing Orchestrator by [reading the developer docs](/docs/develo
 #### License
 
 `orchestrator` is free and open sourced under the [Apache 2.0 license](LICENSE).
+
+#### SDK
+
+Add Cascade or Double Master switchover
+
+useage:
+
+`orchestrator-client -c cascade-master-takeover-auto -i slave_inst:port -d dest_inst:port`
