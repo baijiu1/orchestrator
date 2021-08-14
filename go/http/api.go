@@ -3187,6 +3187,36 @@ func (this *HttpAPI) gracefulMasterTakeover(params martini.Params, r render.Rend
 	Respond(r, &APIResponse{Code: OK, Message: "graceful-master-takeover: successor promoted", Details: topologyRecovery})
 }
 
+func (this *HttpAPI) doubleMasterTakeoverAuto(params martini.Params, r render.Render, req *http.Request, user auth.User, auto bool) {
+	if !isAuthorizedForAction(req, user) {
+		Respond(r, &APIResponse{Code: ERROR, Message: "Unauthorized"})
+		return
+	}
+	clusterName, err := figureClusterName(getClusterHint(params))
+	if clusterName != "" {
+		fmt.Printf("clusterName:%v", clusterName)
+	}
+	if err != nil {
+		Respond(r, &APIResponse{Code: ERROR, Message: err.Error()})
+		return
+	}
+	designatedKey, _ := this.getInstanceKey(params["designatedHost"], params["designatedPort"])
+	log.Debugf("designated Key:%v", designatedKey)
+	//designated Key maybe empty/invalid
+	topologyRecovery, err := logic.DoubleMasterTakeover(clusterName, &designatedKey, auto)
+	log.Debugf("topology Recovery:%v", topologyRecovery)
+	if err != nil {
+		Respond(r, &APIResponse{Code: ERROR, Message: err.Error(), Details: topologyRecovery})
+		return
+	}
+	if topologyRecovery == nil || topologyRecovery.SuccessorKey == nil {
+		Respond(r, &APIResponse{Code: ERROR, Message: "graceful-master-takeover:nosuccessorpromoted", Details: topologyRecovery})
+		return
+
+	}
+	Respond(r, &APIResponse{Code: OK, Message: "cascade-master-takeover:successorpromoted", Details: topologyRecovery})
+}
+
 // GracefulMasterTakeover gracefully fails over a master, either:
 // - onto its single replica, or
 // - onto a replica indicated by the user
@@ -3197,6 +3227,10 @@ func (this *HttpAPI) GracefulMasterTakeover(params martini.Params, r render.Rend
 // GracefulMasterTakeoverAuto gracefully fails over a master onto a replica of orchestrator's choosing
 func (this *HttpAPI) GracefulMasterTakeoverAuto(params martini.Params, r render.Render, req *http.Request, user auth.User) {
 	this.gracefulMasterTakeover(params, r, req, user, true)
+}
+
+func (this *HttpAPI) DoubleMasterTakeoverAuto(params martini.Params, r render.Render, req *http.Request, user auth.User) {
+	this.doubleMasterTakeoverAuto(params, r, req, user, true)
 }
 
 // ForceMasterFailover fails over a master (even if there's no particular problem with the master)
@@ -3694,6 +3728,12 @@ func (this *HttpAPI) RegisterRequests(m *martini.ClassicMartini) {
 	this.registerAPIRequest(m, "relocate-below/:host/:port/:belowHost/:belowPort", this.RelocateBelow)
 	this.registerAPIRequest(m, "relocate-slaves/:host/:port/:belowHost/:belowPort", this.RelocateReplicas)
 	this.registerAPIRequest(m, "regroup-slaves/:host/:port", this.RegroupReplicas)
+
+	// 双主
+	this.registerAPIRequest(m, "cascade-master-takeover-auto/:host/:port", this.DoubleMasterTakeoverAuto)
+	this.registerAPIRequest(m, "cascade-master-takeover-auto/:host/:port/:designatedHost/:designatedPort", this.DoubleMasterTakeoverAuto)
+	this.registerAPIRequest(m, "cascade-master-takeover-auto/:clusterHint", this.DoubleMasterTakeoverAuto)
+	this.registerAPIRequest(m, "cascade-master-takeover-auto/:clusterHint/:designatedHost/:designatedPort", this.DoubleMasterTakeoverAuto)
 
 	// Classic file:pos relocation:
 	this.registerAPIRequest(m, "move-up/:host/:port", this.MoveUp)

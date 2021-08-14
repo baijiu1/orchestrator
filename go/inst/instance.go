@@ -440,6 +440,15 @@ func (this *Instance) IsDescendantOf(other *Instance) bool {
 	return false
 }
 
+func (this *Instance) CascadeIsDescendantOf(other *Instance) bool {
+	for _, uuid := range strings.Split(this.AncestryUUID, ",") {
+		if uuid == other.ServerUUID && uuid != "" {
+			return false
+		}
+	}
+	return false
+}
+
 // CanReplicateFrom uses heursitics to decide whether this instacne can practically replicate from other instance.
 // Checks are made to binlog format, version number, binary logs etc.
 func (this *Instance) CanReplicateFrom(other *Instance) (bool, error) {

@@ -2853,6 +2853,40 @@ func relocateReplicasInternal(replicas [](*Instance), instance, other *Instance)
 	return nil, log.Errorf("Relocating %+v replicas of %+v below %+v turns to be too complex; please do it manually", len(replicas), instance.Key, other.Key), errs
 }
 
+func DoubleMasterRelocateReplicas(instanceKey, otherKey *InstanceKey, pattern string) (replicas [](*Instance), other *Instance, err error, errs []error) {
+
+	instance, found, err := ReadInstance(instanceKey)
+	if err != nil || !found {
+		return replicas, other, log.Errorf("Error reading %+v", *instanceKey), errs
+	}
+	other, found, err = ReadInstance(otherKey)
+	if err != nil || !found {
+		return replicas, other, log.Errorf("Error reading %+v", *otherKey), errs
+	}
+
+	replicas, err = ReadReplicaInstances(instanceKey)
+	if err != nil {
+		return replicas, other, err, errs
+	}
+	replicas = RemoveInstance(replicas, otherKey)
+	replicas = filterInstancesByPattern(replicas, pattern)
+	if len(replicas) == 0 {
+		// Nothing to do
+		return replicas, other, nil, errs
+	}
+	for _, replica := range replicas {
+		if other.CascadeIsDescendantOf(replica) {
+			return replicas, other, log.Errorf("relocate-replicas: %+v is a descendant of %+v", *otherKey, replica.Key), errs
+		}
+	}
+	replicas, err, errs = relocateReplicasInternal(replicas, instance, other)
+
+	if err == nil {
+		AuditOperation("relocate-replicas", instanceKey, fmt.Sprintf("relocated %+v replicas of %+v below %+v", len(replicas), *instanceKey, *otherKey))
+	}
+	return replicas, other, err, errs
+}
+
 // RelocateReplicas will attempt moving replicas of an instance indicated by instanceKey below another instance.
 // Orchestrator will try and figure out the best way to relocate the servers. This could span normal
 // binlog-position, pseudo-gtid, repointing, binlog servers...

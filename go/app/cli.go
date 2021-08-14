@@ -1537,6 +1537,19 @@ func Cli(command string, strict bool, instance string, destination string, owner
 			fmt.Println(*promotedMasterCoordinates)
 			log.Debugf("Promoted %+v as new master. Binlog coordinates at time of promotion: %+v", topologyRecovery.SuccessorKey, *promotedMasterCoordinates)
 		}
+	case registerCliCommand("cascade-master-takeover-auto", "Recovery", `cascade replication topology promote a new master.):
+{
+clusterName:=getClusterName(clusterAlias, instanceKey)
+if destinationKey != nil {
+validateInstanceIsFound(destinationKey)
+}
+topologyRecovery, err:=logic.DoubleMasterTakeover(clusterName, destinationKey, true)
+if err!=nil{
+log.Fatale(err)
+}
+fmt.Println(topology Recovery.Successor Key.DisplayString() )
+log.Debugf("Promoted%+vas new master.Binlogcoordinatesattimeofpromotion:%+v", topology Recovery.Successor Key, err)
+}
 	case registerCliCommand("replication-analysis", "Recovery", `Request an analysis of potential crash incidents in all known topologies`):
 		{
 			analysis, err := inst.GetReplicationAnalysis("", &inst.ReplicationAnalysisHints{})

@@ -2118,3 +2118,70 @@ func GracefulMasterTakeover(clusterName string, designatedKey *inst.InstanceKey,
 
 	return topologyRecovery, promotedMasterCoordinates, err
 }
+
+
+
+func DoubleMasterTakeover(clusterName string, designatedKey *inst.InstanceKey, auto bool) (topologyRecovery *TopologyRecovery, err error) {
+	//返回当前主库
+	clusterMasters, err:=inst.ReadClusterWriteableMaster(clusterName)
+	if err!=nil{
+		return nil, fmt.Errorf("Can not deduce cluster master for%+v；error:%+v", clusterName, err)
+	}
+	if len(clusterMasters) != 1 {
+		return nil, fmt.Errorf("Can not deduce cluster master for%+v.Found%+v potential masters", clusterName, len(clusterMasters) )
+	}
+		clusterMaster := clusterMasters[0]
+
+		//返回从库
+		clusterSlaves, err:= inst.DoubleMasterOfReadReplicaInstances(clusterName)
+		fmt.Printf("当前从库:%v", clusterSlaves[0] )
+		if err != nil {
+			return nil, fmt.Errorf("Can not deduce cluster master for%+v.Found%+v potential masters", clusterName, len(clusterSlaves) )
+		}
+
+			if len(clusterSlaves) !=1 {
+		return nil, fmt.Errorf("Can not deduce cluster master for%+v；error:%+v", clusterName, err)
+	}
+				//返回另一个主库
+				clusterOtherMasters, err:=inst.DoubleMasterOfOtherMasterInstances(clusterName)
+
+				if err!=nil{
+					return nil, fmt.Errorf("Can not deduce cluster master for%+v；error:%+v", clusterName, err)
+				}
+				if len(clusterOtherMasters) !=1 {
+					return nil, fmt.Errof("Can not deduce cluster master for%+v.Found%+v potential masters", clusterName, len(clusterOtherMasters) )
+				}
+	analysisEntry, err := forceAnalysisEntry(clusterName, inst.DeadMaster, inst.GracefulMasterTakeoverCommandHint, &clusterMaster.Key)
+	if err != nil {
+		return nil, fmt.Errorf("Can not deduce cluster master for%+v；error:%+v", clusterName, err)
+	}
+	cascadeTakeoverTopologyRecovery := &TopologyRecovery{
+		SuccessorKey:&clusterOtherMasters[0].Key,
+		AnalysisEntry:analysisEntry,
+	}
+
+						老主设置readonly
+					if clusterMaster, err=inst.SetReadOnly(&clusterMaster.Key, true); err!=nil {
+						return nil, err
+						}
+						execute Processes(config.Config.PostFailoverProcesses, "PostFailoverProcesses", cascadeTakeoverTopologyRecovery, false)
+
+						relocatedReplicas, _, err, _ := inst.RelocateReplicas(&clusterMaster.Key, &clusterOtherMasters[0].Key, ")
+						if err!=nil {
+return nil, fmt.Errorf("Can not deduce cluster master for%+v；error:%+v", clusterName, err)
+}
+
+
+						if len(relocatedReplicas) !=1{
+return nil, fmt.Errorf("Can not deduce cluster master for%+v.Found%+v potential masters", clusterName, len(relocatedReplicas) )
+}
+log.Info("GracefulMasterTakeover:willset%+vasread_only", clusterMaster.Key)
+						//新主设置read_only=o
+						if clusterMaster, err = inst.SetReadOnly(&clusterOtherMasters[0].Key, false); err!=nil {
+
+return nil, err
+}
+						fmt.Printf("&Topology Recovery:%v", cascadeTakeoverTopologyRecovery)
+						execute Processes(config.Config.PostMasterFailoverProcesses, "PostMasterFailoverProcesses", cascadeTakeoverTopologyRecovery, false)
+						return cascadeTakeoverTopologyRecovery, err
+						}
