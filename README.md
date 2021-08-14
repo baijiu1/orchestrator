@@ -89,3 +89,5 @@ Add Cascade or Double Master switchover
 useage:
 
 `orchestrator-client -c cascade-master-takeover-auto -i slave_inst:port -d dest_inst:port`
+
+Add precheck tools, check list:
