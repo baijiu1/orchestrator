@@ -2146,7 +2146,7 @@ func DoubleMasterTakeover(clusterName string, designatedKey *inst.InstanceKey, a
 		return nil, fmt.Errorf("Can not deduce cluster master for%+v；error:%+v", clusterName, err)
 	}
 	if len(clusterOtherMasters) != 1 {
-		return nil, fmt.Errof("Can not deduce cluster master for%+v.Found%+v potential masters", clusterName, len(clusterOtherMasters))
+		return nil, fmt.Errorf("Can not deduce cluster master for%+v.Found%+v potential masters", clusterName, len(clusterOtherMasters))
 	}
 	analysisEntry, err := forceAnalysisEntry(clusterName, inst.DeadMaster, inst.GracefulMasterTakeoverCommandHint, &clusterMaster.Key)
 	if err != nil {
@@ -2157,7 +2157,7 @@ func DoubleMasterTakeover(clusterName string, designatedKey *inst.InstanceKey, a
 		AnalysisEntry: analysisEntry,
 	}
 
-	老主设置readonly
+	// 老主设置readonly
 	if clusterMaster, err = inst.SetReadOnly(&clusterMaster.Key, true); err != nil {
 		return nil, err
 	}
@@ -2165,11 +2165,11 @@ func DoubleMasterTakeover(clusterName string, designatedKey *inst.InstanceKey, a
 
 	relocatedReplicas, _, err, _ := inst.RelocateReplicas(&clusterMaster.Key, &clusterOtherMasters[0].Key, "")
 	if err != nil {
-		return nil, fmt.Errorf("Can not deduce cluster master for%+v；error:%+v", clusterName, err)
+		return nil, fmt.Errorf("Can not deduce cluster master for %v；error: %v", clusterName, err)
 	}
 
 	if len(relocatedReplicas) != 1 {
-		return nil, fmt.Errorf("Can not deduce cluster master for%+v.Found%+v potential masters", clusterName, len(relocatedReplicas))
+		return nil, fmt.Errorf("Can not deduce cluster master for %v.Found %v potential masters", clusterName, len(relocatedReplicas))
 	}
 	log.Info("GracefulMasterTakeover:willset%+vasread_only", clusterMaster.Key)
 	//新主设置read_only=o
