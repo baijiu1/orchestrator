@@ -48,8 +48,18 @@ Run:
 
 ### Build
 
-Build via:
+set :
+
+```bigquery
+go env -w GO111MODULE=auto
+go env -w GOPROXY=https://goproxy.cn,direct
+go env -w GOARCH="amd64"
+go env -w CGO_ENABLED="1"
 ```
+
+Build via(on root):
+```
+    chmod +x script/build
     ./script/build
 ```
 This takes care of `GOPATH` and various other considerations.
