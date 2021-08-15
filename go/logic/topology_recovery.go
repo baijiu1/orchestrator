@@ -2120,34 +2120,35 @@ func GracefulMasterTakeover(clusterName string, designatedKey *inst.InstanceKey,
 }
 
 func DoubleMasterTakeover(clusterName string, designatedKey *inst.InstanceKey, auto bool) (topologyRecovery *TopologyRecovery, err error) {
-	//返回当前主库
+	//返回当前主库 cluster_name = ? and read_only = 0 and (replication_depth = 0 or is_co_master)
 	clusterMasters, err := inst.ReadClusterWriteableMaster(clusterName)
 	if err != nil {
-		return nil, fmt.Errorf("Can not deduce cluster master for%+v；error:%+v", clusterName, err)
+		return nil, fmt.Errorf("Can not find read_only = 0 host or master, please check current master read_only. cluster_name: %v. err: %v", clusterName, err)
 	}
 	if len(clusterMasters) != 1 {
-		return nil, fmt.Errorf("Can not deduce cluster master for%+v.Found%+v potential masters", clusterName, len(clusterMasters))
+		return nil, fmt.Errorf("find two or more read_only = 0 host, switchover failed. cluster_name: %v.", clusterName)
 	}
 	clusterMaster := clusterMasters[0]
 
 	//返回从库
 	clusterSlaves, err := inst.DoubleMasterOfReadReplicaInstances(clusterName)
 	if err != nil {
-		return nil, fmt.Errorf("Can not deduce cluster master for%+v.Found%+v potential masters", clusterName, len(clusterSlaves))
+		return nil, fmt.Errorf("Can not find slave, please check orchestrator.database_instance table. cluster_name: %v. slave length: %v.", clusterName, len(clusterSlaves))
+	}
+	if len(clusterSlaves) != 1 {
+		fmt.Printf("find two or more slaves cluster master for %v. slaves num: %v", clusterName, len(clusterSlaves))
 	}
 
-	if len(clusterSlaves) != 1 {
-		return nil, fmt.Errorf("Can not deduce cluster master for%+v；error:%+v", clusterName, err)
-	}
 	//返回另一个主库
 	clusterOtherMasters, err := inst.DoubleMasterOfOtherMasterInstances(clusterName)
-
 	if err != nil {
-		return nil, fmt.Errorf("Can not deduce cluster master for%+v；error:%+v", clusterName, err)
+		return nil, fmt.Errorf("Can not find this cluster Second master of %v；error: %v", clusterName, err)
 	}
 	if len(clusterOtherMasters) != 1 {
-		return nil, fmt.Errorf("Can not deduce cluster master for%+v.Found%+v potential masters", clusterName, len(clusterOtherMasters))
+		return nil, fmt.Errorf("Can not deduce cluster master for %v. Found cluster have Three master, This is wrong. and cluster master length is: %v", clusterName, len(clusterOtherMasters))
 	}
+
+	// 传入集群名称，失败代码（deadmaster）， 命令， 失败的主机
 	analysisEntry, err := forceAnalysisEntry(clusterName, inst.DeadMaster, inst.GracefulMasterTakeoverCommandHint, &clusterMaster.Key)
 	if err != nil {
 		return nil, fmt.Errorf("Can not deduce cluster master for%+v；error:%+v", clusterName, err)
@@ -2158,26 +2159,33 @@ func DoubleMasterTakeover(clusterName string, designatedKey *inst.InstanceKey, a
 	}
 
 	// 老主设置readonly
+	log.Info("CascadeMasterTakeover:will set %v as read_only = 1", clusterMaster.Key)
 	if clusterMaster, err = inst.SetReadOnly(&clusterMaster.Key, true); err != nil {
 		return nil, err
 	}
+
+	// 执行外部钩子函数
 	executeProcesses(config.Config.PostFailoverProcesses, "PostFailoverProcesses", cascadeTakeoverTopologyRecovery, false)
 
-	relocatedReplicas, _, err, _ := inst.RelocateReplicas(&clusterMaster.Key, &clusterOtherMasters[0].Key, "")
+	// 开始迁移从库到另一个主库上
+	relocatedReplicas, _, err, _ := inst.DoubleMasterRelocateReplicas(&clusterMaster.Key, &clusterOtherMasters[0].Key, "")
+	// 如果迁移失败，那么老主独立
 	if err != nil {
 		return nil, fmt.Errorf("Can not deduce cluster master for %v；error: %v", clusterName, err)
 	}
 
 	if len(relocatedReplicas) != 1 {
-		return nil, fmt.Errorf("Can not deduce cluster master for %v.Found %v potential masters", clusterName, len(relocatedReplicas))
+		fmt.Printf("relocate slaves for cluster name: %v, relocate %v slaves", clusterName, len(relocatedReplicas))
 	}
-	log.Info("GracefulMasterTakeover:willset%+vasread_only", clusterMaster.Key)
-	//新主设置read_only=o
+
+	log.Info("CascadeMasterTakeover:will set %v as read_only = 0", clusterOtherMasters[0].Key)
+	//新主设置read_only=0
 	if clusterMaster, err = inst.SetReadOnly(&clusterOtherMasters[0].Key, false); err != nil {
 
 		return nil, err
 	}
-	fmt.Printf("&Topology Recovery:%v", cascadeTakeoverTopologyRecovery)
+
+	// 执行钩子函数 VIP 漂移
 	executeProcesses(config.Config.PostMasterFailoverProcesses, "PostMasterFailoverProcesses", cascadeTakeoverTopologyRecovery, false)
 	return cascadeTakeoverTopologyRecovery, err
 }
