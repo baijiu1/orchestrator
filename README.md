@@ -91,3 +91,10 @@ useage:
 `orchestrator-client -c cascade-master-takeover-auto -i slave_inst:port -d dest_inst:port`
 
 Add precheck tools, check list:
+1、 cascade or double master replication topology
+2、 orchestrator nodes ssh to topology check
+3、 meta.cluster table check
+4、 orchestrator dect mysql account connection check
+5、 dect mysql account privileges check
+6、 hostname dns check
+7、 metadata check

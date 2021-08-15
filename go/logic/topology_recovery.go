@@ -2132,7 +2132,6 @@ func DoubleMasterTakeover(clusterName string, designatedKey *inst.InstanceKey, a
 
 	//返回从库
 	clusterSlaves, err := inst.DoubleMasterOfReadReplicaInstances(clusterName)
-	fmt.Printf("当前从库:%v", clusterSlaves[0])
 	if err != nil {
 		return nil, fmt.Errorf("Can not deduce cluster master for%+v.Found%+v potential masters", clusterName, len(clusterSlaves))
 	}

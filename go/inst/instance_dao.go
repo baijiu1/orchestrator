@@ -1413,6 +1413,23 @@ func ReadReplicaInstances(masterKey *InstanceKey) ([](*Instance), error) {
 	return readInstancesByCondition(condition, sqlutils.Args(masterKey.Hostname, masterKey.Port), "")
 }
 
+func DoubleMasterOfReadReplicaInstances(clusterName string) ([](*Instance), error) {
+	condition := `
+			cluster_name = ?
+			and is_co_master = 0
+		`
+	return readInstancesByCondition(condition, sqlutils.Args(clusterName), "")
+}
+
+func DoubleMasterOfOtherMasterInstances(clusterName string) ([](*Instance), error) {
+	condition := `
+			cluster_name = ?
+			and is_co_master = 1
+			and read_only = 1
+		`
+	return readInstancesByCondition(condition, sqlutils.Args(clusterName), "")
+}
+
 // ReadReplicaInstancesIncludingBinlogServerSubReplicas returns a list of direct slves including any replicas
 // of a binlog server replica
 func ReadReplicaInstancesIncludingBinlogServerSubReplicas(masterKey *InstanceKey) ([](*Instance), error) {
