@@ -2165,7 +2165,9 @@ func DoubleMasterTakeover(clusterName string, designatedKey *inst.InstanceKey, a
 	}
 
 	// 执行外部钩子函数
-	executeProcesses(config.Config.PostFailoverProcesses, "PostFailoverProcesses", cascadeTakeoverTopologyRecovery, false)
+	if err := executeProcesses(config.Config.PostFailoverProcesses, "PostFailoverProcesses", cascadeTakeoverTopologyRecovery, false); err != nil {
+		return nil, nil
+	}
 
 	// 开始迁移从库到另一个主库上
 	relocatedReplicas, _, err, _ := inst.DoubleMasterRelocateReplicas(&clusterMaster.Key, &clusterOtherMasters[0].Key, "")
@@ -2186,6 +2188,9 @@ func DoubleMasterTakeover(clusterName string, designatedKey *inst.InstanceKey, a
 	}
 
 	// 执行钩子函数 VIP 漂移
-	executeProcesses(config.Config.PostMasterFailoverProcesses, "PostMasterFailoverProcesses", cascadeTakeoverTopologyRecovery, false)
+	if err := executeProcesses(config.Config.PostMasterFailoverProcesses, "PostMasterFailoverProcesses", cascadeTakeoverTopologyRecovery, false); err != nil {
+		return nil, nil
+	}
+
 	return cascadeTakeoverTopologyRecovery, err
 }
