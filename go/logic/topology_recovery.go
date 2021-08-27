@@ -2164,6 +2164,11 @@ func DoubleMasterTakeover(clusterName string, designatedKey *inst.InstanceKey, a
 		return nil, err
 	}
 
+	demotedMasterSelfBinlogCoordinates := &clusterMaster.SelfBinlogCoordinates
+	log.Infof("DoubleMasterTakeover: Will wait for %+v to reach master coordinates %+v", clusterOtherMasters[0].Key, *demotedMasterSelfBinlogCoordinates)
+	if _, _, err = inst.WaitForExecBinlogCoordinatesToReach(&clusterOtherMasters[0].Key, demotedMasterSelfBinlogCoordinates, time.Duration(config.Config.ReasonableMaintenanceReplicationLagSeconds)*time.Second); err != nil {
+		return nil, nil
+	}
 	// 执行外部钩子函数
 	if err := executeProcesses(config.Config.PostFailoverProcesses, "PostFailoverProcesses", cascadeTakeoverTopologyRecovery, false); err != nil {
 		return nil, nil
