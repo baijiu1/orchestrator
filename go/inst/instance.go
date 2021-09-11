@@ -43,6 +43,7 @@ type Instance struct {
 	FlavorName                   string
 	ReadOnly                     bool
 	Binlog_format                string
+	MyBinlogPath                 string
 	BinlogRowImage               string
 	LogBinEnabled                bool
 	LogSlaveUpdatesEnabled       bool // for API backwards compatibility. Equals `LogReplicationUpdatesEnabled`
