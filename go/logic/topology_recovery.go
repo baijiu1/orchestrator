@@ -2119,9 +2119,14 @@ func GracefulMasterTakeover(clusterName string, designatedKey *inst.InstanceKey,
 	return topologyRecovery, promotedMasterCoordinates, err
 }
 
-func DoubleMasterTakeover(clusterName string, designatedKey *inst.InstanceKey, auto bool) (topologyRecovery *TopologyRecovery, err error) {
+func DoubleMasterTakeover(clusterName string, auto bool) (topologyRecovery *TopologyRecovery, err error) {
 	//返回当前主库 cluster_name = ? and read_only = 0 and (replication_depth = 0 or is_co_master)
 	clusterMasters, err := inst.ReadClusterWriteableMaster(clusterName)
+	if len(clusterMasters) != 0 {
+		fmt.Printf("当前主库: %v \n", clusterMasters[0])
+	} else {
+		return nil, fmt.Errorf("Can not found cluster master, please check read only parameter and must be sure read_only = 0 only one node cluster")
+	}
 	if err != nil {
 		return nil, fmt.Errorf("Can not find read_only = 0 host or master, please check current master read_only. cluster_name: %v. err: %v", clusterName, err)
 	}
@@ -2132,11 +2137,16 @@ func DoubleMasterTakeover(clusterName string, designatedKey *inst.InstanceKey, a
 
 	//返回从库
 	clusterSlaves, err := inst.DoubleMasterOfReadReplicaInstances(clusterName)
-	if err != nil {
-		return nil, fmt.Errorf("Can not find slave, please check orchestrator.database_instance table. cluster_name: %v. slave length: %v.", clusterName, len(clusterSlaves))
+	if len(clusterSlaves) != 0 {
+		fmt.Printf("当前从库: %v \n", clusterSlaves[0])
+	} else {
+		return nil, fmt.Errorf("Can not found cluster slave, please check  cluster slave is exist in cluster for %v;\n", clusterName)
 	}
-	if len(clusterSlaves) != 1 {
-		fmt.Printf("find two or more slaves cluster master for %v. slaves num: %v", clusterName, len(clusterSlaves))
+	if err != nil {
+		return nil, fmt.Errorf("Can not found cluster slave for cluster_name: %v; error: %v\n", clusterName, err)
+	}
+	if len(clusterSlaves) == 0 {
+		fmt.Printf("find two or more slaves cluster master for %v. slaves num: %v, this version donot support no slave switchover\n", clusterName, len(clusterSlaves))
 	}
 
 	//返回另一个主库
@@ -2196,6 +2206,18 @@ func DoubleMasterTakeover(clusterName string, designatedKey *inst.InstanceKey, a
 	if err := executeProcesses(config.Config.PostMasterFailoverProcesses, "PostMasterFailoverProcesses", cascadeTakeoverTopologyRecovery, false); err != nil {
 		return nil, nil
 	}
+
+	instInfo := strings.Split(clusterMasterSelfHostnameAndPortstr, ":")
+	logInfo := strings.Split(demotedMasterSelfBinlogCoordinates, ":")
+
+	mybinlogpath := clusterMaster.MyBinlogPath
+	masterbinlog := logInfo[0]
+	postion := logInfo[1]
+	masterip := instInfo[0]
+
+	//打印orch leader 信息
+	newmasterbinlog := dealbinlog.DealBinLog(mybinlogpath, masterip, masterbinlog, postion)
+	fmt.Printf("New master Binlog is :%v\n", newmasterbinlog)
 
 	return cascadeTakeoverTopologyRecovery, err
 }
