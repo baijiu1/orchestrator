@@ -30,6 +30,7 @@ import (
 	"github.com/openark/golib/log"
 	"github.com/openark/orchestrator/go/attributes"
 	"github.com/openark/orchestrator/go/config"
+	"github.com/openark/orchestrator/go/dealbinlog"
 	"github.com/openark/orchestrator/go/inst"
 	"github.com/openark/orchestrator/go/kv"
 	ometrics "github.com/openark/orchestrator/go/metrics"
