@@ -2119,7 +2119,7 @@ func GracefulMasterTakeover(clusterName string, designatedKey *inst.InstanceKey,
 	return topologyRecovery, promotedMasterCoordinates, err
 }
 
-func DoubleMasterTakeover(clusterName string, auto bool) (topologyRecovery *TopologyRecovery, err error) {
+func DoubleMasterTakeover(clusterName string, designatedKey *inst.InstanceKey, auto bool) (topologyRecovery *TopologyRecovery, err error) {
 	//返回当前主库 cluster_name = ? and read_only = 0 and (replication_depth = 0 or is_co_master)
 	clusterMasters, err := inst.ReadClusterWriteableMaster(clusterName)
 	if len(clusterMasters) != 0 {
@@ -2190,6 +2190,10 @@ func DoubleMasterTakeover(clusterName string, auto bool) (topologyRecovery *Topo
 	}
 
 	demotedMasterSelfBinlogCoordinates := &clusterMaster.SelfBinlogCoordinates
+	demotedMasterSelfBinlogCoordinatestr := fmt.Sprintf("%s", demotedMasterSelfBinlogCoordinates)
+
+	clusterMasterSelfHostnameAndPort := &clusterMaster.Key
+	clusterMasterSelfHostnameAndPortstr := fmt.Sprintf("%s", clusterMasterSelfHostnameAndPort)
 	log.Infof("DoubleMasterTakeover: Will wait for %+v to reach master coordinates %+v", clusterOtherMasters[0].Key, *demotedMasterSelfBinlogCoordinates)
 	if _, _, err = inst.WaitForExecBinlogCoordinatesToReach(&clusterOtherMasters[0].Key, demotedMasterSelfBinlogCoordinates, time.Duration(config.Config.ReasonableMaintenanceReplicationLagSeconds)*time.Second); err != nil {
 		return nil, nil
@@ -2223,7 +2227,7 @@ func DoubleMasterTakeover(clusterName string, auto bool) (topologyRecovery *Topo
 	}
 
 	instInfo := strings.Split(clusterMasterSelfHostnameAndPortstr, ":")
-	logInfo := strings.Split(demotedMasterSelfBinlogCoordinates, ":")
+	logInfo := strings.Split(demotedMasterSelfBinlogCoordinatestr, ":")
 
 	mybinlogpath := clusterMaster.MyBinlogPath
 	masterbinlog := logInfo[0]
