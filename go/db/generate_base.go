@@ -44,6 +44,7 @@ var generateSQLBase = []string{
           num_slave_hosts int(10) unsigned NOT NULL,
           slave_hosts text CHARACTER SET ascii NOT NULL,
           cluster_name varchar(128) CHARACTER SET ascii NOT NULL,
+          mybinlog_path varchar(210) CHARACTER SET ascii NOT NULL,
           PRIMARY KEY (hostname,port)
         ) ENGINE=InnoDB DEFAULT CHARSET=ascii
 	`,
