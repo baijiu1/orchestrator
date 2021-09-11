@@ -2163,10 +2163,25 @@ func DoubleMasterTakeover(clusterName string, auto bool) (topologyRecovery *Topo
 	if err != nil {
 		return nil, fmt.Errorf("Can not deduce cluster master for%+v；error:%+v", clusterName, err)
 	}
+	tokenUid := util.PrettyUniqueToken()
 	cascadeTakeoverTopologyRecovery := &TopologyRecovery{
-		SuccessorKey:  &clusterOtherMasters[0].Key,
-		AnalysisEntry: analysisEntry,
+		SuccessorKey:              &clusterOtherMasters[0].Key,
+		AnalysisEntry:             analysisEntry,
+		UID:                       tokenUid,
+		LostReplicas:              *inst.NewInstanceKeyMap(),
+		ParticipatingInstanceKeys: *inst.NewInstanceKeyMap(),
+		AllErrors:                 []string{},
+		RecoveryType:              NotMasterRecovery,
+		IsSuccessful:              true,
 	}
+	AuditTopologyRecovery(cascadeTakeoverTopologyRecovery, fmt.Sprintf("Will promete %+v", clusterOtherMasters[0].Key))
+	if _, err := writeTopologyRecovery(cascadeTakeoverTopologyRecovery); err != nil {
+		return nil, log.Errore(err)
+	}
+	if err := writeResolveRecovery(cascadeTakeoverTopologyRecovery); err != nil {
+		return nil, log.Errore(err)
+	}
+	AuditTopologyRecovery(cascadeTakeoverTopologyRecovery, fmt.Sprintf("Will set old master read_only = 1. cluster master: %+v", clusterMaster.Key))
 
 	// 老主设置readonly
 	log.Info("CascadeMasterTakeover:will set %v as read_only = 1", clusterMaster.Key)
@@ -2179,6 +2194,7 @@ func DoubleMasterTakeover(clusterName string, auto bool) (topologyRecovery *Topo
 	if _, _, err = inst.WaitForExecBinlogCoordinatesToReach(&clusterOtherMasters[0].Key, demotedMasterSelfBinlogCoordinates, time.Duration(config.Config.ReasonableMaintenanceReplicationLagSeconds)*time.Second); err != nil {
 		return nil, nil
 	}
+
 	// 执行外部钩子函数
 	if err := executeProcesses(config.Config.PostFailoverProcesses, "PostFailoverProcesses", cascadeTakeoverTopologyRecovery, false); err != nil {
 		return nil, nil
@@ -2188,21 +2204,20 @@ func DoubleMasterTakeover(clusterName string, auto bool) (topologyRecovery *Topo
 	relocatedReplicas, _, err, _ := inst.DoubleMasterRelocateReplicas(&clusterMaster.Key, &clusterOtherMasters[0].Key, "")
 	// 如果迁移失败，那么老主独立
 	if err != nil {
+		inst.SetReadOnly(&clusterMaster.Key, true)
 		return nil, fmt.Errorf("Can not deduce cluster master for %v；error: %v", clusterName, err)
 	}
 
-	if len(relocatedReplicas) != 1 {
-		fmt.Printf("relocate slaves for cluster name: %v, relocate %v slaves", clusterName, len(relocatedReplicas))
+	if len(relocatedReplicas) == 0 {
+		return nil, fmt.Errorf("\n Cannot deduce cluster master for %+v \n", clusterName)
 	}
 
 	log.Info("CascadeMasterTakeover:will set %v as read_only = 0", clusterOtherMasters[0].Key)
 	//新主设置read_only=0
 	if clusterMaster, err = inst.SetReadOnly(&clusterOtherMasters[0].Key, false); err != nil {
-
 		return nil, err
 	}
 
-	// 执行钩子函数 VIP 漂移
 	if err := executeProcesses(config.Config.PostMasterFailoverProcesses, "PostMasterFailoverProcesses", cascadeTakeoverTopologyRecovery, false); err != nil {
 		return nil, nil
 	}
