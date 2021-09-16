@@ -6,7 +6,7 @@
 
 #### 二次开发
 
-该版本基于《https://github.com/openark/orchestrator》3.2.4版本开发
+该版本基于《https://github.com/openark/orchestrator》 3.2.4版本开发
 
 新增日志补齐，双主切换等功能，兼容KP和MHA架构
 
