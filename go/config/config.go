@@ -270,6 +270,7 @@ type Configuration struct {
 	KVClusterMasterPrefix                      string            // Prefix to use for clusters' masters entries in KV stores (internal, consul, ZK), default: "mysql/master"
 	WebMessage                                 string            // If provided, will be shown on all web pages below the title bar
 	MaxConcurrentReplicaOperations             int               // Maximum number of concurrent operations on replicas
+    SlaveBinLogEnableMaxLagSeconds             int               // 日志补齐系统介入最大允许延迟时间
 }
 
 // ToJSONString will marshal this configuration as JSON
