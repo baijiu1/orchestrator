@@ -7,7 +7,7 @@ package main
 #
 # Version History:
 #
-#                v1.0. 2021/05/13 10:23:18 baijie Start writing, the first verion.
+#            v1.0. 2021/05/13 10:23:18 baijie Start writing, the first verion.
 #######################################################
 
 */
