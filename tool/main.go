@@ -13,6 +13,7 @@ import (
     "precheck/tab"
     "precheck/topology"
     "precheck/meta"
+    "precheck/acq"
 )
 
 func main() {
@@ -28,5 +29,15 @@ func main() {
                 return
             }
             OrchHist, err2 := 
+        case "switchover":
+            OrchHist, _ := orch.GetClusterInwhichOrch(Init.ClusterName, Meta.MetaDsn)
+            isCoMas, _ := topology.DetectReplica(Init.ClusterName, OrchHost[0].HostIP, OrchHost[0].BackendPort)
+            if Init.ForceFailOver {
+                cut.FailOver(Init.ClusterName, Meta.MetaDsn, OrchHost[0].OrchHostName, OrchHost[0].OrchWebPort, isCoMas)
+            } else {
+                cut.SwitchOver(Init.ClusterName, Meta.MetaDsn, OrchHost[0].OrchHostName, OrchHost[0].OrchWebPor, isCoMas)
+            }
+        default:
+            acq.ByDefaultAction()
     }
 }
