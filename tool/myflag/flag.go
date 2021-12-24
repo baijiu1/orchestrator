@@ -60,3 +60,8 @@ func NewFlag() (*Args, error) {
     }
     return &Args{OpType: a.OpType, ClusterName: a.ClusterName, ForceFailOver: *forceFailover}, nil
 }
+
+func NewMetaInfo() (*MetaDBInfo, error) {
+    m.MetaEncodePasswd = "xxxx"
+    m.MetaPasswd, _ = base64.Std
+}
