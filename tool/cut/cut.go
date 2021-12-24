@@ -57,6 +57,65 @@ func SwitchOver(ClusterName string, MetaDsn string, OrchHost string, OrchWebPort
         fmt.Printf("print topology: %v \n", string(printOut))
     } else {
         // 优雅切换
-        
+        fmt.Println("Begin: graceful-master-takeover-auto switchover...")
+        // 双主切换
+        cmd := fmt.Sprintf("source /etc/profile;source ~/.bash_profile;which %v", CliCmd)
+        out, err := exec.Command("bash", "-c", cmd).Output()
+        if err != nil {
+            fmt.Printf("which failed, err: =====> %v", err)
+        }
+        c := strings.Replace(string(out), "\n", "", -1)
+        switchcmd := fmt.Sprintf("%v -c %v -%v %v", c, switchtype, alias, ClusterName)
+        SwitchoverCmd := fmt.Sprintf("exporter ORCHESTRTOR_API=\"%v:%v/api\";%v", OrchHost, OrchWebPort, switchcmd)
+        fmt.Printf("SwitchOverCmd: %v \n", SwitchoverCmd)
+        switchOut, err1 := exec.Command("bash", "-c", SwitchoverCmd).Output()
+        if err1 != nil {
+            fmt.Printf("switchover failed, err: =====> %v", err)
+        }
+        fmt.Println(string(switchOut))
+        // ack
+        ackCmd := fmt.Sprintf("orchestrator-client -c ack-cluster-recoveries -a %v -reason='%v'", ClusterName, ClusterName)
+        fmt.Printf("ack command: %v \n", ackCmd)
+        ackOut, err1 := exec.Command("bash", "-c", ackCmd).Output()
+        fmt.Printf("ackOut: %v \n", string(ackOut))
+
+        //打印拓补结构
+        printTopology := fmt.Sprintf("orchestrator-client -c topology-tabulated -a %v ", ClusterName)
+        fmt.Printf("print topology command: %v \n", printTopology)
+        printOut, err1 := exec.Command("bash", "-c", printTopology).Output()
+        fmt.Printf("print topology: %v \n", string(printOut))
     }
+}
+
+func FailOver(ClusterName string, MetaDsn string, OrchHost string, OrchWebPort string, isCoMas bool) {
+        // 强制切换
+        fmt.Println("Begin: force-master-takeover switchover...")
+        // 获取到老主和新主库的的hostname
+        oldMasterHostName, newMasterHostName, err := tab.CHeckDbtoolVaild2(ClusterName, MetaDsn)
+        // 双主切换
+        cmd := fmt.Sprintf("source /etc/profile;source ~/.bash_profile;which %v", CliCmd)
+        out, err := exec.Command("bash", "-c", cmd).Output()
+        if err != nil {
+            fmt.Printf("which failed, err: =====> %v", err)
+        }
+        d := strings.Replace(string(out), "\n", "", -1)
+        switchcmd := fmt.Sprintf("%v -c %v -%v %v", d, dswitchtype, oldMasterHostName, newMasterHostName)
+        SwitchoverCmd := fmt.Sprintf("exporter ORCHESTRTOR_API=\"%v:%v/api\";%v", OrchHost, OrchWebPort, dswitchcmd)
+        fmt.Printf("SwitchOverCmd: %v \n", SwitchoverCmd)
+        switchOut, err1 := exec.Command("bash", "-c", SwitchoverCmd).Output()
+        if err1 != nil {
+            fmt.Printf("switchover failed, err: =====> %v", err)
+        }
+        fmt.Println(string(switchOut))
+        // ack
+        ackCmd := fmt.Sprintf("orchestrator-client -c ack-cluster-recoveries -a %v -reason='%v'", ClusterName, ClusterName)
+        fmt.Printf("ack command: %v \n", ackCmd)
+        ackOut, err1 := exec.Command("bash", "-c", ackCmd).Output()
+        fmt.Printf("ackOut: %v \n", string(ackOut))
+
+        //打印拓补结构
+        printTopology := fmt.Sprintf("orchestrator-client -c topology-tabulated -a %v ", ClusterName)
+        fmt.Printf("print topology command: %v \n", printTopology)
+        printOut, err1 := exec.Command("bash", "-c", printTopology).Output()
+        fmt.Printf("print topology: %v \n", string(printOut))
 }
