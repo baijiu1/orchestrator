@@ -60,11 +60,52 @@ func main() {
             if err4 != nil {
                 return
             }
-            err5 := access.OrchDiscoverAccountCheck()
+            err5 := account.OrchDiscoverAccountCheck()
             if err5 != nil {
                 return
             }
-            
+            err6 := account.CheckOrchDiscoverPrivilege()
+            if err6 != nil {
+                return
+            }
+            // 检查是否开启了了gtid
+            SupportGtid, err7 := account.GetClusterInUSEGtidMode(Init.ClusterName, OrchHost[0].HostIP, OrchHost[0].BackendPort)
+            if err7 != nil {
+                return
+            }
+            err8 := account.CheckOrchDiscoverDbPseudoGtidPrivilege(SupportGtid)
+            if err8 != nil {
+                return
+            }
+            // 检查meta.cluster表中的集群名信息是否正确
+            err9 := tab.CheckMetaClusterTable(infolist, Init.ClusterName)
+            if err9 != nil {
+                return
+            }
+            // 检查元数据表的数据中心标识字段是否正确
+            _, _, err10 := tab.CHeckDbtoolVaild2(Init.ClusterName,Meta.MetaDsn)
+            if err10 != nil {
+                return
+            }
+            // 检查机器名是否可以ping通
+            err11 := host.CheckMachineDBS(Init.ClusterName,Meta.MetaDsn)
+            if err11 != nil {
+                return
+            }
+            err12 := access.CheckOrchToClusterSSHIsalive(Init.ClusterName,OrchHost)
+            if err12 != nil {
+                return
+            }
+            // 检查延迟
+            err13 := lag.CheckSlaveLag(Init.ClusterName, OrchHost[0].HostIP, OrchHost[0].BackendPort)
+            if err13 != nil {
+                return
+            }
+            //打印现在的结构
+            err14 := topology.PrintTopologyTabulated(Init.ClusterName, OrchHost[0].HostIP, OrchHost[0].BackendPort)
+            if err14 != nil {
+                return
+            }
 
         case "switchover":
             OrchHist, _ := orch.GetClusterInwhichOrch(Init.ClusterName, Meta.MetaDsn)
