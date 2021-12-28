@@ -749,7 +749,30 @@ func ReadTopologyInstanceBufferable(instanceKey *InstanceKey, bufferWrites bool,
 		waitGroup.Add(1)
 		go func() {
 			defer waitGroup.Done()
-			err := db.QueryRow(config.Config.DetectRegionQuery).Scan(&instance.Region)
+            // 修改为以cmdb元数据为中心的取值操作
+            var (
+                myUser = "xxx"
+                myPort = 3306
+                myHost string
+                netWork = "tcp"
+                dbName = "metadb"
+                myEncodePasswd = "xxxx"
+                myPasswd, _ = base64.StdEncoding.DecodeString(myEncodePasswd)
+            )
+            hn, _ = os.Hostname()
+            if strings.Contains(hn, "prod") {
+                myHost = "xxxx"
+            } else {
+                myHost = "xxxx"
+            }
+            QueryDataCenterSql = fmt.Sprintf("select data_center from meta_table where hostname = '%s' and port = '%s'", instanceKey.Hostname, instanceKey.Port)
+            dsn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", myUser, myPasswd, netWork, myHost, dbName)
+            DB, err1 := sql.Open("mysql", dsn)
+            if err1 != nil {
+                fmt.Printf("open meta db failed, err: %v \n", err1)
+            }
+            defer DB.Close()
+			err := db.QueryRow(QueryDataCenterSql).Scan(&instance.Region)
 			logReadTopologyInstanceError(instanceKey, "DetectRegionQuery", err)
 		}()
 	}
