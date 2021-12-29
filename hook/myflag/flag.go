@@ -100,6 +100,9 @@ func NewFlagArgs() (*OrchCfg, error) {
     o.ArPingCmdb = fmt.Sprintf("source /etc/profile;/usr/bin/sudo /sbin/arping -I %s -c 1 -s %s %s", o.InterFace, c.VipAddr, o.Mask)
     o.MountMHACmd = fmt.Sprintf("source /etc/profile;/usr/bin/sudo /sbin/ifconfig %v:%v %v/%v", o.InterFace, o.MHAKey, c.VipAddr, o.Mask)
     o.UmountMHACmd = fmt.Sprintf("source /etc/profile;/usr/bin/sudo /sbin/ifconfig %v:%v down", o.InterFace, o.Mask)
-    return &OrchCfg{ClusterName: o.ClusterName, DeadStatus: o.DeadStatus, OldMaster: o.OldMaster, OldMasterPort: o.OldMasterPort, NewMaster: o.NewMaster, NewMasterPort: o.NewMasterPort, VipAddr: c.VipAddr, Mask: o.Mask, InterFace: o.InterFace, CmdVipAdd: o.CmdVipAdd, CmdVipDel: o.CmdVipDel, CmdVipstat: o.CmdVipstat}
+    return &OrchCfg{ClusterName: o.ClusterName, DeadStatus: o.DeadStatus, OldMaster: o.OldMaster, OldMasterPort: o.OldMasterPort, NewMaster: o.NewMaster, NewMasterPort: o.NewMasterPort, VipAddr: c.VipAddr, Mask: o.Mask, InterFace: o.InterFace, CmdVipAdd: o.CmdVipAdd, CmdVipDel: o.CmdVipDel, CmdVipstat: o.CmdVipstat, SSHUser: o.SSHUser, SSHPublicKeys: o.SSHPublicKeys, GateWayCmd: o.GateWayCmd, MHAKey: o.MHAKey, ArPingCmdb: o.ArPingCmdb, ClusterType: c.HaType, MountMHACmd: o.MountMHACmd, UmountMHACmd: o.UmountMHACmd, MaxWaitPing: o.MaxWaitPing}, nil
+}
 
+func getGateWay() {
+    
 }
