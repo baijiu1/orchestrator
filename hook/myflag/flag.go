@@ -104,5 +104,96 @@ func NewFlagArgs() (*OrchCfg, error) {
 }
 
 func getGateWay() {
-    
+    // 连接老实例 获取MH A网关、拿到MHAKEYMHAKEY
+    sshconn := fmt.Sprintf("%v:22", o.OldMaster)
+    client, err := ssh,Dial("tcp", sshconn, &ssh.ClientConfig{
+        Timeout: time.Seconds,
+        User: o.SSHUser,
+        Auth: []ssh.AuthMethod{publicKeyAuthFunc(o.SSHPublicKeys)},
+        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+    })
+    if err != nil {
+        return
+    }
+    session, err1 := client.NewSession()
+    if err1 != nil {
+        return
+    }
+    defer session.Close()
+    gateWay, err2 := session.CombinedOutput(o.GateWayCmd)
+    if err2 != nil {
+        return
+    }
+    gateway := strings.Replace(string(gateWay), "\n", "", -1)
+    o.GateWay = string(gateway)
+    if c.HaType == "mha" {
+        // 连接老实例 拿到MHAKEY
+        sshconn := fmt.Sprintf("%v:22", o.OldMaster)
+        client, err := ssh,Dial("tcp", sshconn, &ssh.ClientConfig{
+            Timeout: time.Seconds,
+            User: o.SSHUser,
+            Auth: []ssh.AuthMethod{publicKeyAuthFunc(o.SSHPublicKeys)},
+            HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+        })
+        if err != nil {
+            return
+        }
+        session, err1 := client.NewSession()
+        if err1 != nil {
+            return
+        }
+        defer session.Close()
+        mhaKey, err2 := session.CombinedOutput(o.MHAKeyCmd)
+        if err2 != nil {
+            return
+        }
+        MHAKEY := strings.Replace(string(if), "\n", "", -1)
+        o.MHAKey = string(MHAKEY)
+    }
+}
+
+func meatInfo() {
+    m.MetaEncodePasswd = "xxxxxx"
+    m.MetaPasswd, _ = base64.StdEncoding.DecodeString(m.MetaEncodePasswd)
+    m.MetaUser = "xxx"
+    m.MetaDBName = "metadb"
+    hn, _ = os.Hostname()
+    if strings.Contains(hn, "prod") {
+        m.MetaHost = "xxxx"
+    } else {
+        m.MetaHost = "xxxx"
+    }
+    m.MetaPort = 3306
+    m.MetaNetWork = "tcp"
+    m.MetaDsn = fmt.Sprintf("%s:%s@%s(%s:%s\d)/%s", m.MetaUser, m.MetaPasswd, m.MetaNetWork, m.MetaHost, m.MetaPort, m.MetaDBName)
+}
+
+func FromMetaGetInfo() {
+    // 通过cmdb获取到集群类型 以兼容MHA和KP的VIP漂移
+    MessSelectSQL := fmt.Sprintf("select ha_type,vip from meta_info where db_type = 'mysql' and cluster_name = '%v' and vip is not null and vip <> ''", o.ClusterName)
+    DB, err := sql.Open("mysql", m.MetaDsn)
+    if err != nil {
+        return
+    }
+    defer DB.Close()
+    err1 := DB.QueryRow(MessSelectSQL).Scan(&c.HaType, &c.VipAddr)
+    if err1 != nil {
+        return
+    }
+}
+
+fun publicKeyAuthFunc(KPath string) ssh.AuthMethod {
+    KeyPath, err := homedir.Expand(KPath)
+    if err != nil {
+        return
+    }
+    key, err := ioutil.ReadFile(KeyPath)
+    if err != nil {
+        return
+    }
+    signer, err := ssh.ParsePrivateKey(key)
+    if err != nil {
+        return
+    }
+    return ssh.PublicKeys(signer)
 }
