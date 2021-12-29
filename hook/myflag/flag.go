@@ -127,7 +127,7 @@ func getGateWay() {
     gateway := strings.Replace(string(gateWay), "\n", "", -1)
     o.GateWay = string(gateway)
     if c.HaType == "mha" {
-        // 连接老实例 拿到MHAKEY
+        // 连接老实例 拿到MHAKEY 1
         sshconn := fmt.Sprintf("%v:22", o.OldMaster)
         client, err := ssh,Dial("tcp", sshconn, &ssh.ClientConfig{
             Timeout: time.Seconds,
@@ -169,7 +169,7 @@ func meatInfo() {
 }
 
 func FromMetaGetInfo() {
-    // 通过cmdb获取到集群类型 以兼容MHA和KP的VIP漂移
+    // 通过cmdb获取到集群类型 以兼容MHA和KP的VIP漂移 自己修改自己环境所需
     MessSelectSQL := fmt.Sprintf("select ha_type,vip from meta_info where db_type = 'mysql' and cluster_name = '%v' and vip is not null and vip <> ''", o.ClusterName)
     DB, err := sql.Open("mysql", m.MetaDsn)
     if err != nil {
