@@ -30,7 +30,10 @@ func MountVip(conf *myflag.OrchCfg, logger *log.Logger) {
         }
         defer session.Close()
         unionCmd := fmt.Sprintf("%v;%v", conf.CmdVipAdd)
-        session.CombinedOutput(unionCmd)
+        _, err2 := session.CombinedOutput(unionCmd)
         logger.Printf("exec command: %v \n", unionCmd)
+        if err2 != nil {
+            return
+        }
     }
 }
