@@ -20,7 +20,11 @@
 cd ~/orchestrator/tool/
 go build main.go
 
-./main --OpType=[precheck|switchover] --ClusterName=[cluster name]
+./main --OpType=[precheck|switchover] --ClusterName=[cluster name] [--force]
+
+说明：
+--OpType: 选择是进行预先检查还是进行切换，切换可选--force进行强制切换
+--ClusterNmae： 选择要进行检查或切换的集群
 ```
 
 useage:
