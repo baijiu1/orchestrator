@@ -764,7 +764,7 @@ func ReadTopologyInstanceBufferable(instanceKey *InstanceKey, bufferWrites bool,
 		waitGroup.Add(1)
 		go func() {
 			defer waitGroup.Done()
-			err := db.QueryRow(QueryDataCenterSql).Scan(&instance.Region)
+			err := db.QueryRow(DetectRegionQuery).Scan(&instance.Region)
 			logReadTopologyInstanceError(instanceKey, "DetectRegionQuery", err)
 		}()
 	}
