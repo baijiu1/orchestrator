@@ -57,9 +57,11 @@ MetaDBPort： 对应的端口
 MetaDBName： 对应的数据库名称
 ```
 
-比如，我要去元数据库取对等切换节点，让这两个对等切换节点处于同一个数据中心（datacenter），那可以这样配置：
+比如，我要去元数据库取对等切换节点，让这两个对等切换节点处于同一个数据中心（datacenter）或取集群别名，或者取vip，那可以这样配置：
 ```sql
 DetectDataCenterQuery: "select dc_vaild from dbinfo where hostname = 'dc_vaild_host_flag' and port = 'dc_vaild_port_flag'"
+DetectClusterDomainQuery: "select vip as cluster_domain from dbinfo where hostname = 'dc_vaild_host_flag' and port = 'dc_vaild_port_flag'"
+DetectClusterAliasQuery: "select cluster_name as cluster_alias from dbinfo where hostname = 'dc_vaild_host_flag' and port = 'dc_vaild_port_flag'"
 ```
 
 这里是通过hostname和port字段去确定一个实例的，同理physical_ip和port去确定一个实例也一样。
