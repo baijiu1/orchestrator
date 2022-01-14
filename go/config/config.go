@@ -271,6 +271,9 @@ type Configuration struct {
 	WebMessage                                 string            // If provided, will be shown on all web pages below the title bar
 	MaxConcurrentReplicaOperations             int               // Maximum number of concurrent operations on replicas
     SlaveBinLogEnableMaxLagSeconds             int               // 日志补齐系统介入最大允许延迟时间
+    MetaDBHost                                 string            // 元数据库的地址
+    MetaDBPort                                 int               // 元数据库的端口
+    MetaDBName                                 string            // 元数据库的数据库名
 }
 
 // ToJSONString will marshal this configuration as JSON
@@ -439,6 +442,9 @@ func newConfiguration() *Configuration {
 		KVClusterMasterPrefix:                      "mysql/master",
 		WebMessage:                                 "",
 		MaxConcurrentReplicaOperations:             5,
+        MetaDBHost:                                 "",
+        MetaDBPort:                                 3307,
+        MetaDBName:                                 "",
 	}
 }
 
