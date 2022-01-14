@@ -12,7 +12,7 @@
 
 生态建设： 一键precheck与switchover工具
 
-一键工具使用方式：
+一、一键工具使用方式：
 
 构建：
 
@@ -27,7 +27,7 @@ go build main.go
 --ClusterNmae： 选择要进行检查或切换的集群
 ```
 
-vip漂移使用：
+二、vip漂移脚本使用：
 ```shell
 cd ~/orchestrator/hook/
 
@@ -47,6 +47,21 @@ useage:
 {successorPort}： 新主的端口
 
 当然还有很多环境变量，具体可以查看官网文档。
+```
+
+三：以CMDB为中心取值：
+新增三个配置项：
+```shell
+MetaDBHost： 该参数意思是到哪个元数据库去取值
+MetaDBPort： 对应的端口
+MetaDBName： 对应的数据库名称
+
+比如，我要去元数据库取对等切换节点，让这两个对等切换节点处于同一个数据中心（datacenter），那可以这样配置：
+DetectDataCenterQuery: "select dc_vaild from dbinfo where hostname = 'flag' and port = 'flag'"
+
+这里是通过hostname和port字段去确定一个实例的，同理physical_ip和port去确定一个实例也一样。
+其中，flag是占位符，程序里去替换的东西，不要动。这里你只需要替换hostname和port字段就好，改成你们表里自己定义的字段。
+一般有两种方式确定一个实例，一种是使用主机的hostname，一种是使用物理IP地址。
 ```
 
 useage:
