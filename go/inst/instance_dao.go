@@ -748,14 +748,19 @@ func ReadTopologyInstanceBufferable(instanceKey *InstanceKey, bufferWrites bool,
             // } else {
             //     QueryDataCenterSql := fmt.Sprintf("select data_center from meta_table where hostname = '%s' and port = '%s'", instanceKey.Hostname, instanceKey.Port)
             // }
-            
+            QueryDataCenterSql := config.Config.DetectDataCenterQuery
+            if strings.Contains(QueryDataCenterSql, "dc_vaild_host_flag") {
+                HostPort := fmt.Sprintf("%d", instanceKey.Port)
+                QueryDataCenterSql = strings.Replace(QueryDataCenterSql, "dc_vaild_host_flag", instanceKey.Hostname, 1)
+                QueryDataCenterSql = strings.Replace(QueryDataCenterSql, "dc_vaild_port_flag", HostPort, 1)
+            }
             dsn := fmt.Sprintf("%s:%s@%s(%s:%d)/%s", config.Config.MySQLTopologyUser, config.Config.MySQLTopologyPassword, netWork, config.Config.MetaDBHost, config.Config.MetaDBPort, config.Config.MetaDBName)
             DB, err1 := sql.Open("mysql", dsn)
             if err1 != nil {
                 fmt.Printf("open meta db failed, err: %v \n", err1)
             }
             defer DB.Close()
-			err := db.QueryRow(config.Config.DetectDataCenterQuery).Scan(&instance.DataCenter)
+			err := db.QueryRow(QueryDataCenterSql).Scan(&instance.DataCenter)
 			logReadTopologyInstanceError(instanceKey, "DetectDataCenterQuery", err)
 		}()
 	}
