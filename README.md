@@ -12,7 +12,7 @@
 
 生态建设： 一键precheck与switchover工具
 
-一、一键工具使用方式：
+一、 **一键工具使用方式：** 
 
 构建：
 
@@ -27,7 +27,7 @@ go build main.go
 --ClusterNmae： 选择要进行检查或切换的集群
 ```
 
-二、vip漂移脚本使用：
+二、 **vip漂移脚本使用：** 
 ```shell
 cd ~/orchestrator/hook/
 
@@ -49,32 +49,46 @@ useage:
 当然还有很多环境变量，具体可以查看官网文档。
 ```
 
-三：以CMDB为中心取值：
+三： **以CMDB为中心取值：** 
 新增三个配置项：
 ```shell
 MetaDBHost： 该参数意思是到哪个元数据库去取值
 MetaDBPort： 对应的端口
 MetaDBName： 对应的数据库名称
-
-比如，我要去元数据库取对等切换节点，让这两个对等切换节点处于同一个数据中心（datacenter），那可以这样配置：
-DetectDataCenterQuery: "select dc_vaild from dbinfo where hostname = 'dc_vaild_host_flag' and port = 'dc_vaild_port_flag'"
-
-这里是通过hostname和port字段去确定一个实例的，同理physical_ip和port去确定一个实例也一样。
-其中， **_dc_vaild_host_flag_** 和 **_dc_vaild_port_flag_** 是占位符，程序里去替换的东西，不要动。
-这里你只需要替换dc_vaild 、hostname、 port字段就好，改成你们表里自己定义的字段。
-字段说明：
-1. dc_vaild： 标识某两个实例处于同一个数据中心的字段，比如A->B->C三个实例，我需要标识A和B处于同一数据中心，那么在表里只需要将这两个实例的dc_vaild设置为Y就好，或者设置为相同的值
-2. hostname： 这个主要是实例的主机名或者IP地址。具体看HostnameResolveMethod设置。
-3. port： 顾名思义就是端口字段。
-
-把元数据放到配置文件中来做的一点是因为：如果要在提供服务的集群上做的话，就需要在除对等实例外的实例上用sql_log_bin去更新dc_vaild这个字段，是有侵入的。
-当然也可以把这份元数据维护在orchestrator自身的那个数据库当中，我这边是有一个总的cmdb，所以放在这里。
 ```
 
-四、日志补齐
-日志补齐系统的原理和MHA日志补齐原理相似，都是用到了show slave status\G里的execute_master_position这个位点来做的。
-只不过orchestrator默认是超过配置的ReasonableReplicationLagSeconds秒后，切换会直接退出，所以新增了一个配置：SlaveBinLogEnableMaxLagSeconds。
+比如，我要去元数据库取对等切换节点，让这两个对等切换节点处于同一个数据中心（datacenter），那可以这样配置：
+```sql
+DetectDataCenterQuery: "select dc_vaild from dbinfo where hostname = 'dc_vaild_host_flag' and port = 'dc_vaild_port_flag'"
+```
+
+这里是通过hostname和port字段去确定一个实例的，同理physical_ip和port去确定一个实例也一样。
+
+其中， **_dc_vaild_host_flag_** 和 **_dc_vaild_port_flag_** 是占位符，程序里去替换的东西，不要动。
+
+这里你只需要替换dc_vaild 、dbinfo 、hostname、 port字段就好，改成你们表里自己定义的字段或表明。
+
+字段说明：
+```shell
+1. dc_vaild： 标识某两个实例处于同一个数据中心的字段，比如A->B->C三个实例，我需要标识A和B处于同一数据中心，那么在表里只需要将这两个实例的dc_vaild设置为Y就好，或者设置为相同的值
+2. dbinfo： 表名。也就是取数据的元数据表的表明。
+3. hostname： 这个主要是实例的主机名或者IP地址。具体看HostnameResolveMethod设置。
+4. port： 顾名思义就是端口字段。
+```
+
+把元数据放到配置文件中来做的一点是因为：如果要在提供服务的集群上做的话，就需要在除对等实例外的实例上用sql_log_bin去更新dc_vaild这个字段，是有侵入的。
+
+当然也可以把这份元数据维护在orchestrator自身的那个数据库当中，我这边是有一个总的cmdb，所以放在这里。
+
+
+四、  **日志补齐** 
+
+日志补齐系统的原理和MHA日志补齐原理相似，都是用到了  **show slave status\G**  里的  **execute_master_position** 这个位点来做的。
+
+只不过orchestrator默认是超过配置的 **ReasonableReplicationLagSeconds** 秒后，切换会直接退出，所以新增了一个配置： **SlaveBinLogEnableMaxLagSeconds** 。
+
 日志补齐系统具体介入时机：
+
 ```go
 if (secondbehindmaster > ReasonableReplicationLagSeconds && secondbehindmaster < SlaveBinLogEnableMaxLagSeconds) {
     ...
@@ -85,7 +99,9 @@ if (secondbehindmaster > ReasonableReplicationLagSeconds && secondbehindmaster <
     return instance, false, nil
 }
 ```
+
 以上代码就是日志补齐系统的介入时机。也就是延迟大于ReasonableReplicationLagSeconds配置并且小于SlaveBinLogEnableMaxLagSeconds配置。
+
 具体怎么做？
 ```shell
 首先拿到execute_master_position，通过它找到binlog日志文件，拉取到orchestrator主节点上，通过mysqlbinlog解析为sql文件，然后在新主库上应用。
