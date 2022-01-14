@@ -57,11 +57,15 @@ MetaDBPort： 对应的端口
 MetaDBName： 对应的数据库名称
 
 比如，我要去元数据库取对等切换节点，让这两个对等切换节点处于同一个数据中心（datacenter），那可以这样配置：
-DetectDataCenterQuery: "select dc_vaild from dbinfo where hostname = 'flag' and port = 'flag'"
+DetectDataCenterQuery: "select dc_vaild from dbinfo where hostname = 'dc_vaild_host_flag' and port = 'dc_vaild_port_flag'"
 
 这里是通过hostname和port字段去确定一个实例的，同理physical_ip和port去确定一个实例也一样。
-其中，flag是占位符，程序里去替换的东西，不要动。这里你只需要替换hostname和port字段就好，改成你们表里自己定义的字段。
-一般有两种方式确定一个实例，一种是使用主机的hostname，一种是使用物理IP地址。
+其中， **_dc_vaild_host_flag_** 和 **_dc_vaild_port_flag_** 是占位符，程序里去替换的东西，不要动。
+这里你只需要替换dc_vaild 、hostname、 port字段就好，改成你们表里自己定义的字段。
+字段说明：
+1. dc_vaild： 标识某两个实例处于同一个数据中心的字段，比如A->B->C三个实例，我需要标识A和B处于同一数据中心，那么在表里只需要将这两个实例的dc_vaild设置为Y就好，或者设置为相同的值
+2. hostname： 这个主要是实例的主机名或者IP地址。具体看HostnameResolveMethod设置。
+3. port： 顾名思义就是端口字段。
 ```
 
 useage:
