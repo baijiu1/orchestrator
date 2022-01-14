@@ -66,7 +66,31 @@ DetectDataCenterQuery: "select dc_vaild from dbinfo where hostname = 'dc_vaild_h
 1. dc_vaild： 标识某两个实例处于同一个数据中心的字段，比如A->B->C三个实例，我需要标识A和B处于同一数据中心，那么在表里只需要将这两个实例的dc_vaild设置为Y就好，或者设置为相同的值
 2. hostname： 这个主要是实例的主机名或者IP地址。具体看HostnameResolveMethod设置。
 3. port： 顾名思义就是端口字段。
+
+把元数据放到配置文件中来做的一点是因为：如果要在提供服务的集群上做的话，就需要在除对等实例外的实例上用sql_log_bin去更新dc_vaild这个字段，是有侵入的。
+当然也可以把这份元数据维护在orchestrator自身的那个数据库当中，我这边是有一个总的cmdb，所以放在这里。
 ```
+
+四、日志补齐
+日志补齐系统的原理和MHA日志补齐原理相似，都是用到了show slave status\G里的execute_master_position这个位点来做的。
+只不过orchestrator默认是超过配置的ReasonableReplicationLagSeconds秒后，切换会直接退出，所以新增了一个配置：SlaveBinLogEnableMaxLagSeconds。
+日志补齐系统具体介入时机：
+```go
+if (secondbehindmaster > ReasonableReplicationLagSeconds && secondbehindmaster < SlaveBinLogEnableMaxLagSeconds) {
+    ...
+    return instance, true, nil
+} else if (secondbehindmaster < ReasonableReplicationLagSeconds) {
+    // sql线程等待代码
+} else {
+    return instance, false, nil
+}
+```
+以上代码就是日志补齐系统的介入时机。也就是延迟大于ReasonableReplicationLagSeconds配置并且小于SlaveBinLogEnableMaxLagSeconds配置。
+具体怎么做？
+```shell
+首先拿到execute_master_position，通过它找到binlog日志文件，拉取到orchestrator主节点上，通过mysqlbinlog解析为sql文件，然后在新主库上应用。
+```
+
 
 useage:
 
