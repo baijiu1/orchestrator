@@ -15,6 +15,8 @@
 3、 改进： 从CMDB元数据中心取值，避免在集群中建表，避免使用sql_log_bin语句造成主备gtid不一致
 4、 修复： 优雅切换时，无法选择到正确的datacenter实例，导致切换失败的情况
 5、 新增： 日志补齐，在延迟情况下补齐缺失数据
+6、 新增： orchestrator-client DataCenter显示
+7、 新增： 双主模式切换(该模块时根据我们实际环境单独开发，不影响其他切换函数或切换方式)
 ```
 
 一、 **一键工具使用方式：** 
@@ -162,8 +164,32 @@ if (secondbehindmaster > ReasonableReplicationLagSeconds && secondbehindmaster <
 ```
 
 
+六、 **orchestrator-client改进** 
+
+因为我们需要用到datacenter来配置同机房实例来互相切换，所以需要在orchestrator-client中显示datacenter的配置情况，以便切换前做最后检查
+
+改进代码如下：
+```go
+func (this *Instance) descriptionTokens() {
+    ...
+    tokens = append(tokens, this,DataCenter)
+    ...
+}
+```
+
+使用方式如下：
+```shell
+orchestrator-client -c topology-tabulated -a <cluster_name>
+
+可以看到datacenter显示
+```
+
+
+
+七、 **双主模式切换** 
+```shell
 useage:
 
 `orchestrator-client -c cascade-master-takeover-auto -i slave_inst:port -d dest_inst:port`
 
-
+```
