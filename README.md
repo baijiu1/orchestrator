@@ -13,7 +13,8 @@
 1、 生态建设： 一键precheck与switchover工具
 2、 生态建设： VIP漂移工具
 3、 改进： 从CMDB元数据中心取值，避免在集群中建表，避免使用sql_log_bin语句造成主备gtid不一致
-4、 新增： 日志补齐，在延迟情况下补齐缺失数据
+4、 修复： 优雅切换时，无法选择到正确的datacenter实例，导致切换失败的情况
+5、 新增： 日志补齐，在延迟情况下补齐缺失数据
 ```
 
 一、 **一键工具使用方式：** 
@@ -87,7 +88,54 @@ DetectClusterAliasQuery: "select cluster_name as cluster_alias from dbinfo where
 当然也可以把这份元数据维护在orchestrator自身的那个数据库当中，我这边是有一个总的cmdb，所以放在这里。
 
 
-四、  **日志补齐** 
+四、 **修复优雅切换**
+
+由于我们需要在同一个数据中心的实例相互切换，所以设置了： PreventCrossDataCenterMasterFailover = True，所以在进行切换时，发现选择不到正确的数据中心，导致切换失败
+
+修复如下：
+
+```go
+func chooseCandidateReplica(...){
+    ...
+    priorityMajorVersion, _ := getPriorityMajorVersionForCandidate(replicas)
+	priorityBinlogFormat, _ := getPriorityBinlogFormatForCandidate(replicas)
+    // 新增对参数：PreventCrossDataCenterMasterFailover 判断
+    if config.Config.PreventCrossDataCenterMasterFailover {
+        for _, replica := range replicas {
+            replica := replica
+            if isGenerallyValidAsCandidateReplica(replica) &&
+                // 新增数据中心判断 没有改判断，所以切换失败
+                IsDataCenterCandidateReplica(priorityDataCenter, replica) &&
+                !IsBannedFromBeingCandidateReplica(replica) &&
+                !IsSmallerMajorVersion(priorityMajorVersion, replica.MajorVersionString()) &&
+                !IsSmallerBinlogFormat(priorityBinlogFormat, replica.Binlog_format) {
+                // this is the one
+                candidateReplica = replica
+                break
+            }
+	    }
+    } else {
+        // 还是原来的切换方案
+        for _, replica := range replicas {
+            replica := replica
+            if isGenerallyValidAsCandidateReplica(replica) &&
+                !IsBannedFromBeingCandidateReplica(replica) &&
+                !IsSmallerMajorVersion(priorityMajorVersion, replica.MajorVersionString()) &&
+                !IsSmallerBinlogFormat(priorityBinlogFormat, replica.Binlog_format) {
+                // this is the one
+                candidateReplica = replica
+                break
+            }
+	    }
+    }
+    ...
+}
+```
+
+以上代码修复了在优雅切换中，配置了数据中心参数，但是实例选择不正确的问题，同时也不会影响不配置该参数的情况。该bug已提交至github官方。
+
+
+五、  **日志补齐** 
 
 日志补齐系统的原理和MHA日志补齐原理相似，都是用到了  **show slave status\G**  里的  **execute_master_position** 这个位点来做的。
 
