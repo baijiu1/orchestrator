@@ -9,11 +9,12 @@
 该版本基于《https://github.com/openark/orchestrator》 3.2.4版本开发
 
 新增功能：
+```shell
 1、 生态建设： 一键precheck与switchover工具
 2、 生态建设： VIP漂移工具
 3、 改进： 从CMDB元数据中心取值，避免在集群中建表，避免使用sql_log_bin语句造成主备gtid不一致
 4、 新增： 日志补齐，在延迟情况下补齐缺失数据
-
+```
 
 一、 **一键工具使用方式：** 
 
