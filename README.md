@@ -57,7 +57,7 @@ useage:
 ```
 
 三： **以CMDB为中心取值：** 
-新增三个配置项：
+新增三个配置项，示例配置文件：conf/orchestrator-simple.conf.json：
 ```shell
 MetaDBHost： 该参数意思是到哪个元数据库去取值
 MetaDBPort： 对应的端口
