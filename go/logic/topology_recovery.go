@@ -2110,10 +2110,10 @@ func GracefulMasterTakeover(clusterName string, designatedKey *inst.InstanceKey,
 		}
 	}
 	// 在老主库挂在新主下，没有开启复制之前，应用增量日志
-	if _, rep, _ = inst.WaitForExecBinlogCoordinatesToReach(&designatedInstance.Key, demotedMasterSelfBinlogCoordinates, time.Duration(config.Config.ReasonableMaintenanceReplicationLagSeconds)*time.Second); rep {
-		// 日志里会设置 sql_log_bin = 0
-		apply.ApplyBinLog(parseBinlog, &designatedInstance.Key)
-	}
+	// if _, rep, _ = inst.WaitForExecBinlogCoordinatesToReach(&designatedInstance.Key, demotedMasterSelfBinlogCoordinates, time.Duration(config.Config.ReasonableMaintenanceReplicationLagSeconds)*time.Second); rep {
+	// 	// 日志里会设置 sql_log_bin = 0
+	// 	apply.ApplyBinLog(parseBinlog, &designatedInstance.Key)
+	// }
 	if auto {
 		_, startReplicationErr := inst.StartReplication(&clusterMaster.Key)
 		if err == nil {
