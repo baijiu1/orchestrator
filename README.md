@@ -165,6 +165,10 @@ if (secondbehindmaster > ReasonableReplicationLagSeconds && secondbehindmaster <
 ```shell
 首先拿到execute_master_position，通过它找到binlog日志文件，拉取到orchestrator主节点上，通过mysqlbinlog解析为sql文件，然后在新主库上应用。
 ```
+应用日志的账号是什么？
+```shell
+这里就是用到了配置文件中配置的账号和密码： MySQLTopologyUser、 MySQLTopologyPassword，所以在原来权限的基础上，要把alter、insert、update、delete权限加上去。
+```
 
 
 六、 **orchestrator-client改进** 
