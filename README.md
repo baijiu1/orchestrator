@@ -142,9 +142,9 @@ func chooseCandidateReplica(...){
 
 五、  **日志补齐** 
 
-日志补齐系统的原理和MHA日志补齐原理相似，都是用到了  **show slave status\G**  里的  **execute_master_position** 这个位点来做的。
+日志补齐系统的原理用到了  **show slave status\G**  里的  **execute_master_position** 这个位点来做的。
 
-只不过orchestrator默认是超过配置的 **ReasonableReplicationLagSeconds** 秒后，切换会直接退出，所以新增了一个配置： **SlaveBinLogEnableMaxLagSeconds** 。
+orchestrator默认是超过配置的 **ReasonableReplicationLagSeconds** 秒后，切换会直接退出，所以新增了一个配置： **SlaveBinLogEnableMaxLagSeconds** 。
 
 日志补齐系统具体介入时机：
 
@@ -163,7 +163,8 @@ if (secondbehindmaster > ReasonableReplicationLagSeconds && secondbehindmaster <
 
 具体怎么做？
 ```shell
-首先拿到execute_master_position，通过它找到binlog日志文件，拉取到orchestrator主节点上，通过mysqlbinlog解析为sql文件，然后在新主库上应用。
+Exec_Master_Log_Pos记录的是SQL thread执行到master binlog的文件和位置，对应的master上binlog的文件和位置
+所以，首先拿到Exec_Master_Log_Pos，通过它找到binlog日志文件，拉取到orchestrator主节点上，通过mysqlbinlog解析为sql文件，然后在新主库上应用。
 ```
 
 应用日志的账号是什么？
