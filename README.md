@@ -42,16 +42,17 @@ go build main.go
 
 useage:
 
-./main --ClusterName={failureCluasterAlias} --DeadStatus={failureType} --OldMaster={failedHost} --OldMasterPort={failedPort} --NewMaster={successorHost} --NewMasterPort={successorPort}
+./main --ClusterName={failureClusterAlias} --DeadStatus={failureType} --OldMaster={failedHost} --OldMasterPort={failedPort} --NewMaster={successorHost} --NewMasterPort={successorPort}
 
 说明：
 该脚本是通过外部的orchestrator传入的环境变量来做到vip切换控制的。
-{failureCluasterAlias}： 失败的集群名称（别名）。
+{failureClusterAlias}： 失败的集群名称（别名）。
 {failureType}： 探测到失败的类型，一般为deadmaster，还有其他类型，可以看源码logic/topology_recovery.go下的getCheckAndRecoverFunction()函数里面的switch case语句，里面记录了所有的失败类型。return 后面true和false来控制是否进入恢复过程。至于如何判断是否恢复的，可以看我csdn博客或者公众号：收获不止Oracle
 {failedHost}： 老主
 {failedPort}： 老主的端口
 {successorHost}： 新主
 {successorPort}： 新主的端口
+{failureClusterDomain}: 通过CMDB查到的vip地址，对应DetectClusterDomainQuery查询语句，需要去元数据库查询的
 
 当然还有很多环境变量，具体可以查看官网文档。
 ```
