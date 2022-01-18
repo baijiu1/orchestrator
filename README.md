@@ -101,6 +101,9 @@ func chooseCandidateReplica(...){
     ...
     priorityMajorVersion, _ := getPriorityMajorVersionForCandidate(replicas)
 	priorityBinlogFormat, _ := getPriorityBinlogFormatForCandidate(replicas)
+    // 新增getPriorityDataCenterForCandidate函数，返回datacenter字段，具体代码请查看inst/instance_topology.go
+    priorityDataCenter, _ := getPriorityDataCenterForCandidate(replicas)
+
     // 新增对参数：PreventCrossDataCenterMasterFailover 判断
     if config.Config.PreventCrossDataCenterMasterFailover {
         for _, replica := range replicas {

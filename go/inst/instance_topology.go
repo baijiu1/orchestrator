@@ -2205,6 +2205,31 @@ func getPriorityBinlogFormatForCandidate(replicas [](*Instance)) (priorityBinlog
 	return sorted.First(), nil
 }
 
+// return give replica's datacenter
+func getPriorityDataCenterForCandidate(replicas [](*Instance) (priorityDataCenter string, err error) {
+	if len(replicas) == 0 {
+		return "", log.Errorf("empty replicas list in priorityDataCenter")
+	}
+	candidate := ""
+	for _, replica := range replicas {
+		candidate = replica.DataCenter
+		return candidate, nil
+	}
+	return "", nil
+}
+
+// return give replica datacenter is matched
+func IsDataCenterCandidateReplica(priorityDataCenter, string, replica *Instance) nool {
+	if priorityDataCenter == "Y" {
+		log.Debugf("instance %v is banned because of promotion rule", replica.Key)
+		return true
+	}
+	if matched, _ := regexp.MatchString(config.Config.DataCenterPattern, replica.Key.Hostname); matched {
+		return true
+	}
+	return false
+}
+
 // chooseCandidateReplica
 func chooseCandidateReplica(replicas [](*Instance)) (candidateReplica *Instance, aheadReplicas, equalReplicas, laterReplicas, cannotReplicateReplicas [](*Instance), err error) {
 	if len(replicas) == 0 {
@@ -2212,16 +2237,32 @@ func chooseCandidateReplica(replicas [](*Instance)) (candidateReplica *Instance,
 	}
 	priorityMajorVersion, _ := getPriorityMajorVersionForCandidate(replicas)
 	priorityBinlogFormat, _ := getPriorityBinlogFormatForCandidate(replicas)
+	priorityDataCenter, _ := getPriorityDataCenterForCandidate(replicas)
 
-	for _, replica := range replicas {
-		replica := replica
-		if isGenerallyValidAsCandidateReplica(replica) &&
-			!IsBannedFromBeingCandidateReplica(replica) &&
-			!IsSmallerMajorVersion(priorityMajorVersion, replica.MajorVersionString()) &&
-			!IsSmallerBinlogFormat(priorityBinlogFormat, replica.Binlog_format) {
-			// this is the one
-			candidateReplica = replica
-			break
+	if config.Config.PreventCrossDataCenterMasterFailover {
+		for _, replica := range replicas {
+			replica := replica
+			if isGenerallyValidAsCandidateReplica(replica) &&
+				IsDataCenterCandidateReplica(priorityDataCenter, replica) &&
+				!IsBannedFromBeingCandidateReplica(replica) &&
+				!IsSmallerMajorVersion(priorityMajorVersion, replica.MajorVersionString()) &&
+				!IsSmallerBinlogFormat(priorityBinlogFormat, replica.Binlog_format) {
+				// this is the one
+				candidateReplica = replica
+				break
+			}
+		}
+	} else {
+		for _, replica := range replicas {
+			replica := replica
+			if isGenerallyValidAsCandidateReplica(replica) &&
+				!IsBannedFromBeingCandidateReplica(replica) &&
+				!IsSmallerMajorVersion(priorityMajorVersion, replica.MajorVersionString()) &&
+				!IsSmallerBinlogFormat(priorityBinlogFormat, replica.Binlog_format) {
+				// this is the one
+				candidateReplica = replica
+				break
+			}
 		}
 	}
 	if candidateReplica == nil {
