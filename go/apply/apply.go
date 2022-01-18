@@ -7,11 +7,6 @@ import (
     "github.com/openark/orchestrator/go/inst"
 )
 
-var (
-    myEncodePasswd = "xxxx"
-    myPasswd, _ = base64.StdEndoding.DecodeString(myEncodePasswd
-)
-
 fun ApplyBinLog(parseBinlog string, instanceKey *inst.InstanceKey) {
     execCmd := fmt.Sprintf("mysql -u%s -p%s -h%s -P%s -e 'source %s'", config.Config.MySQLTopologyUser, config.Config.MySQLTopologyPassword, instanceKey.Hostname, instanceKey.Port, parseBinlog)
     execRes := exec.Command(execCmd).Output()
