@@ -168,6 +168,7 @@ if (secondbehindmaster > ReasonableReplicationLagSeconds && secondbehindmaster <
 具体怎么做？
 ```shell
 Exec_Master_Log_Pos记录的是SQL thread执行到master binlog的文件和位置，对应的master上binlog的文件和位置
+
 所以，首先拿到Exec_Master_Log_Pos，通过它找到binlog日志文件，拉取到orchestrator主节点上，通过mysqlbinlog解析为sql文件，然后在新主库上应用。
 ```
 
