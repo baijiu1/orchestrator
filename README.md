@@ -42,7 +42,7 @@ go build main.go
 
 useage:
 
-./main --ClusterName={failureClusterAlias} --DeadStatus={failureType} --OldMaster={failedHost} --OldMasterPort={failedPort} --NewMaster={successorHost} --NewMasterPort={successorPort}
+./main --ClusterName={failureClusterAlias} --DeadStatus={failureType} --OldMaster={failedHost} --OldMasterPort={failedPort} --NewMaster={successorHost} --NewMasterPort={successorPort} --VipAddr={failureClusterDomain}
 
 说明：
 该脚本是通过外部的orchestrator传入的环境变量来做到vip切换控制的。
@@ -55,7 +55,10 @@ useage:
 {failureClusterDomain}: 通过CMDB查到的vip地址，对应DetectClusterDomainQuery查询语句，需要去元数据库查询的
 
 当然还有很多环境变量，具体可以查看官网文档。
+
 ```
+
+此VIP漂移脚本支持的是keepalived形式的vip挂载和卸载： ip addr add vip/32 dev eth0 这样的格式。
 
 三： **以CMDB为中心取值：** 
 新增三个配置项，示例配置文件：conf/orchestrator-simple.conf.json：

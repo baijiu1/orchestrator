@@ -70,12 +70,14 @@ func NewFlagArgs() (*OrchCfg, error) {
     flag.StringVar(&o.OldMasterPort, "OldMasterPort", "OldMasterPort", "old master port")
     flag.StringVar(&o.NewMaster, "NewMaster", "NewMaster", "new master host")
     flag.StringVar(&o.NewMasterPort, "NewMasterPort", "NewMasterPort", "new master port")
+    flag.StringVar(&o.VipAddr, "VipAddr", "VipAddr", "vip addr, env: {failureClusterDomain}")
     flag.Parse()
     meatInfo()
-    FromMetaGetInfo()
+    // FromMetaGetInfo()
     o.MaxWaitPing = 30
     o.SSHUser = "mysql"
     o.SSHPublicKeys = "/home/mysql/.ssh/id_rsa"
+    c.HaType = "kp"
     ho, _ := os.Hostname()
     if strings.Contains(ho, "stg") || strings.Contains(o.OldMaster, "192.168") || strings.Contains(o.NewMaster, "192.168") {
         o.InterFace = "eth0"
