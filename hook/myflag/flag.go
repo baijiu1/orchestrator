@@ -71,6 +71,7 @@ func NewFlagArgs() (*OrchCfg, error) {
     flag.StringVar(&o.NewMaster, "NewMaster", "NewMaster", "new master host")
     flag.StringVar(&o.NewMasterPort, "NewMasterPort", "NewMasterPort", "new master port")
     flag.StringVar(&o.VipAddr, "VipAddr", "VipAddr", "vip addr, env: {failureClusterDomain}")
+    flag.StringVar(&o.InterFace, "InterFace", "InterFace", "net interface, like eth0 bond0 ...")
     flag.Parse()
     meatInfo()
     // FromMetaGetInfo()
@@ -78,17 +79,17 @@ func NewFlagArgs() (*OrchCfg, error) {
     o.SSHUser = "mysql"
     o.SSHPublicKeys = "/home/mysql/.ssh/id_rsa"
     c.HaType = "kp"
-    ho, _ := os.Hostname()
-    if strings.Contains(ho, "stg") || strings.Contains(o.OldMaster, "192.168") || strings.Contains(o.NewMaster, "192.168") {
-        o.InterFace = "eth0"
-        o.Mask = "24"
-    } else if (strings.Contains(o.NewMaster, "yue") && strings.Contains(o.OldMaster, "yue")) || (strings.Contains(o.NewMaster, "10.26") && strings.Contains(o.OldMaster, "10.26")) {
-        o.InterFace = "bond1"
-        o.Mask = "23"
-    } else if (strings.Contains(o.NewMaster, "yun") && strings.Contains(o.OldMaster, "yun")) || (strings.Contains(o.NewMaster, "10.24") && strings.Contains(o.OldMaster, "10.24")){
-        o.InterFace = "bond0"
-        o.Mask = "23"
-    }
+    // ho, _ := os.Hostname()
+    // if strings.Contains(ho, "stg") || strings.Contains(o.OldMaster, "192.168") || strings.Contains(o.NewMaster, "192.168") {
+    //     o.InterFace = "eth0"
+    //     o.Mask = "24"
+    // } else if (strings.Contains(o.NewMaster, "yue") && strings.Contains(o.OldMaster, "yue")) || (strings.Contains(o.NewMaster, "10.26") && strings.Contains(o.OldMaster, "10.26")) {
+    //     o.InterFace = "bond1"
+    //     o.Mask = "23"
+    // } else if (strings.Contains(o.NewMaster, "yun") && strings.Contains(o.OldMaster, "yun")) || (strings.Contains(o.NewMaster, "10.24") && strings.Contains(o.OldMaster, "10.24")){
+    //     o.InterFace = "bond0"
+    //     o.Mask = "23"
+    // }
 
     // keepalived
     o.CmdVipAdd = fmt.Sprintf("source /etc/profile;/usr/bin/sudo ip addr add %v/32 dev %v", c.VipAddr, o.InterFace)

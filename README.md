@@ -42,7 +42,7 @@ go build main.go
 
 useage:
 
-./main --ClusterName={failureClusterAlias} --DeadStatus={failureType} --OldMaster={failedHost} --OldMasterPort={failedPort} --NewMaster={successorHost} --NewMasterPort={successorPort} --VipAddr={failureClusterDomain}
+./main --ClusterName={failureClusterAlias} --DeadStatus={failureType} --OldMaster={failedHost} --OldMasterPort={failedPort} --NewMaster={successorHost} --NewMasterPort={successorPort} --VipAddr={failureClusterDomain} --InterFace="eth0"
 
 说明：
 该脚本是通过外部的orchestrator传入的环境变量来做到vip切换控制的。
@@ -53,6 +53,7 @@ useage:
 {successorHost}： 新主
 {successorPort}： 新主的端口
 {failureClusterDomain}: 通过CMDB查到的vip地址，对应DetectClusterDomainQuery查询语句，需要去元数据库查询的
+InterFace:  网卡名称，可以自己填写自己环境的网口名称
 
 当然还有很多环境变量，具体可以查看官网文档。
 
