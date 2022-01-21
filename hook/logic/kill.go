@@ -31,7 +31,7 @@ func KillMySQLConnection(conf *myflag.OrchCfg, logger *log.Logger) {
     dsn := fmt.Sprintf("%s:%s@%s(%s:%d)/information_schema", myUser, myPasswd, netWork, conf.OldMaster, portInt)
     DB, err := sql.Open("mysql", dsn)
     if err != nil {
-        return
+        logger.Printf("connect mysql failed: %v \n", err)
     }
     if err4 := DB.Ping(); err4 != nil {
         logger.Printf("connot connect old master, maybe shutdown or node is down")
@@ -41,7 +41,7 @@ func KillMySQLConnection(conf *myflag.OrchCfg, logger *log.Logger) {
         for rows.Next() {
             err2 := rows.Scan(&d.Id)
             if err2 != nil {
-                return
+                logger.Printf("scan failed: %v \n", err2)
             }
             // begin kill
             killsql := fmt.Sprintf("kill %v", d.Id)
