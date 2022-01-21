@@ -32,6 +32,8 @@ go build main.go
 说明：
 --OpType: 选择是进行预先检查还是进行切换，切换可选--force进行强制切换
 --ClusterNmae： 选择要进行检查或切换的集群
+
+由于该工具对CMDB有非常深的依赖，所以需要自己修改myflag下的flag.go文件做自定义修改
 ```
 
 二、 **vip漂移脚本使用：** 
