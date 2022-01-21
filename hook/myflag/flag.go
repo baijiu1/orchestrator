@@ -6,6 +6,7 @@ import (
     "flag"
     "fmt"
     "io/ioutil"
+    _ "io/ioutil"
     "os"
     "strings"
     "time"
@@ -160,7 +161,7 @@ func meatInfo() {
     m.MetaPasswd, _ = base64.StdEncoding.DecodeString(m.MetaEncodePasswd)
     m.MetaUser = "xxx"
     m.MetaDBName = "metadb"
-    hn, _ = os.Hostname()
+    hn, _ := os.Hostname()
     if strings.Contains(hn, "prod") {
         m.MetaHost = "xxxx"
     } else {
@@ -168,7 +169,7 @@ func meatInfo() {
     }
     m.MetaPort = 3306
     m.MetaNetWork = "tcp"
-    m.MetaDsn = fmt.Sprintf("%s:%s@%s(%s:%s\d)/%s", m.MetaUser, m.MetaPasswd, m.MetaNetWork, m.MetaHost, m.MetaPort, m.MetaDBName)
+    m.MetaDsn = fmt.Sprintf("%s:%s@%s(%s:%s)/%s", m.MetaUser, m.MetaPasswd, m.MetaNetWork, m.MetaHost, m.MetaPort, m.MetaDBName)
 }
 
 func FromMetaGetInfo() {
@@ -185,7 +186,7 @@ func FromMetaGetInfo() {
     }
 }
 
-fun publicKeyAuthFunc(KPath string) ssh.AuthMethod {
+func publicKeyAuthFunc(KPath string) ssh.AuthMethod {
     KeyPath, err := homedir.Expand(KPath)
     if err != nil {
         return

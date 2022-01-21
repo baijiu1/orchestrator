@@ -1,9 +1,9 @@
 package main
 
 import (
-	"vfailover/myflag"
-	"vfailover/logic"
-	"vfailover/journal"
+	"github.com/openark/orchestrator/hook/journal"
+	"github.com/openark/orchestrator/hook/logic"
+	"github.com/openark/orchestrator/hook/myflag"
 )
 
 func main() {

@@ -4,9 +4,10 @@ import (
     "fmt"
     "golang.org/x/crypto/ssh"
     "github.com/mitchellh/go-homedir"
-    "vfailover/myflag"
+    "github.com/openark/orchestrator/hook/myflag"
+    "strings"
     "time"
-    "io/ioutil"
+    _ "io/ioutil"
     "log"
 )
 
@@ -29,7 +30,7 @@ func MountVip(conf *myflag.OrchCfg, logger *log.Logger) {
             return
         }
         defer session.Close()
-        unionCmd := fmt.Sprintf("%v;%v", conf.CmdVipAdd)
+        //unionCmd := fmt.Sprintf("%v;%v", conf.CmdVipAdd)
         mhaKey, err2 := session.CombinedOutput(o.MHAKeyCmd)
         if err2 != nil {
             return

@@ -4,7 +4,6 @@ import (
     "fmt"
     "encoding/base64"
     "io/ioutil"
-    "precheck/orch"
     "time"
 
     _ "github.com/go-sql-driver/mysql"
@@ -52,7 +51,7 @@ func CheckOrchToClusterSSHIsalive(ClusterName string, OrchHostList []orch.OrchHo
         }
         session, err1 := client.NewSession()
         if err1 != nil {
-            return
+            return session
         }
         defer session.Close()
         cmd := fmt.Sprintf("checkconn --ClusterName=%v --OrchHostIP=%v", ClusterName, host.HostIP)
@@ -67,15 +66,15 @@ func CheckOrchToClusterSSHIsalive(ClusterName string, OrchHostList []orch.OrchHo
 func publicKeyAuthFunc(KPath string) ssh.AuthMethod {
     keyPath, err := homedir.Expand(KPath)
     if err != nil {
-        return
+        return keyPath
     }
     key, err := ioutil.ReadFile(keyPath)
     if err != nil {
-        return
+        return key
     }
     signer, err := ssh.ParsePrivateKey(key)
     if err != nil {
-        return
+        return signer
     }
     return ssh.PublicKeys(signer)
 }
