@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"strings"
 	"time"
-	"strconv"
 
 	"github.com/openark/golib/log"
 	"github.com/openark/golib/sqlutils"
@@ -525,24 +524,24 @@ func WaitForExecBinlogCoordinatesToReach(instanceKey *InstanceKey, coordinates *
 		}
 		// secondsBehindMasters := fmt.Sprintf("%v", instance.SecondsBehindMaster)
 		// secondsBehindMaster := strconv.Atoi(secondsBehindMasters)
-        // 新增延迟延段，如果大于最小延迟时间，并且小于自定义的最大容忍延迟时间，则直接返回true，进行下一步的拓补结构变更
-        // 否则如果延迟小于最小延迟时间，则进入等待逻辑
-        // 如果延迟大于最大容忍延迟，则返回失败，中断切换
-        // if secondsBehindMaster > config.config.ReasonableReplicationLagSeconds && secondsBehindMaster < config.config.SlaveBinLogEnableMaxSeconds {
-        //     return instance, true, nil
-        // } else if secondsBehindMaster < config.config.ReasonableReplicationLagSeconds {
-            switch {
-                case instance.ExecBinlogCoordinates.SmallerThan(coordinates):
-                    time.Sleep(retryInterval)
-                case instance.ExecBinlogCoordinates.Equals(coordinates):
-                    return instance, true, nil
-                case coordinates.SmallerThan(&instance.ExecBinlogCoordinates):
-                    return instance, false, nil
-            }
-        // } else {
-        //     return instance, false, nil
-        // }
-		
+		// 新增延迟延段，如果大于最小延迟时间，并且小于自定义的最大容忍延迟时间，则直接返回true，进行下一步的拓补结构变更
+		// 否则如果延迟小于最小延迟时间，则进入等待逻辑
+		// 如果延迟大于最大容忍延迟，则返回失败，中断切换
+		// if secondsBehindMaster > config.config.ReasonableReplicationLagSeconds && secondsBehindMaster < config.config.SlaveBinLogEnableMaxSeconds {
+		//     return instance, true, nil
+		// } else if secondsBehindMaster < config.config.ReasonableReplicationLagSeconds {
+		switch {
+		case instance.ExecBinlogCoordinates.SmallerThan(coordinates):
+			time.Sleep(retryInterval)
+		case instance.ExecBinlogCoordinates.Equals(coordinates):
+			return instance, true, nil
+		case coordinates.SmallerThan(&instance.ExecBinlogCoordinates):
+			return instance, false, nil
+		}
+		// } else {
+		//     return instance, false, nil
+		// }
+
 	}
 	return instance, exactMatch, err
 }

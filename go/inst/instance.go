@@ -590,7 +590,7 @@ func (this *Instance) descriptionTokens() (tokens []string) {
 	tokens = append(tokens, this.LagStatusString())
 	tokens = append(tokens, this.StatusString())
 	tokens = append(tokens, this.Version)
-	tokens = append(tokens, this,DataCenter)
+	tokens = append(tokens, this.DataCenter)
 	if this.ReadOnly {
 		tokens = append(tokens, "ro")
 	} else {
