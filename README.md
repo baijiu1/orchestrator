@@ -14,10 +14,15 @@
 2、 生态建设： VIP漂移工具
 3、 改进： 从CMDB元数据中心取值，避免在集群中建表，避免使用sql_log_bin语句造成主备gtid不一致
 4、 修复： 优雅切换时，无法选择到正确的datacenter实例，导致切换失败的情况
-5、 新增： 日志补齐，在延迟情况下补齐缺失数据
-6、 新增： orchestrator-client DataCenter显示
-7、 新增： 双主模式切换(该模块时根据我们实际环境单独开发，不影响其他切换函数或切换方式)
+5、 新增： orchestrator-client DataCenter显示
+6、 新增： 双主模式切换(该模块时根据我们实际环境单独开发，不影响其他切换函数或切换方式)
 ```
+
+待添加功能：
+```shell
+1、 待完善： 日志补齐，在延迟情况下补齐缺失数据
+```
+
 
 一、 **一键工具使用方式：** 
 
@@ -94,12 +99,14 @@ DetectClusterAliasQuery: "select cluster_name as cluster_alias from dbinfo where
 
 把元数据放到配置文件中来做的一点是因为：如果要在提供服务的集群上做的话，就需要在除对等实例外的实例上用sql_log_bin去更新dc_vaild这个字段，是有侵入的。
 
-当然也可以把这份元数据维护在orchestrator自身的那个数据库当中，我这边是有一个总的cmdb，所以放在这里。
+当然也可以把这份元数据维护在orchestrator自身的那个数据库当中，我们这边是有一个总的cmdb，所以放在这里。
 
 
-四、 **修复优雅切换**
+四、 **BUG修复**
 
-由于我们需要在同一个数据中心的实例相互切换，所以设置了： PreventCrossDataCenterMasterFailover = True，所以在进行切换时，发现选择不到正确的数据中心，导致切换失败
+1.优雅切换无法选择正确的数据中心
+
+处于同一个IDC数据中心的实例需要相互切换时，设置： PreventCrossDataCenterMasterFailover = True，在进行切换时，选择不到正确的数据中心，导致切换失败
 
 修复如下：
 
