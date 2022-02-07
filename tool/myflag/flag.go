@@ -61,5 +61,7 @@ func NewFlag() (*Args, error) {
 
 func NewMetaInfo() (*MetaDBInfo, error) {
 	m.MetaEncodePasswd = "xxxx"
-	m.MetaPasswd, _ = base64.Std
+	m.MetaPasswd, _ = base64.StdEncoding.DecodeString(m.MetaEncodePasswd)
+
+	return &MetaDBInfo{MetaDsn: m.MetaDsn}, nil
 }
