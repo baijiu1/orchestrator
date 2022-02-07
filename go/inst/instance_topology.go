@@ -2206,7 +2206,7 @@ func getPriorityBinlogFormatForCandidate(replicas [](*Instance)) (priorityBinlog
 }
 
 // return give replica's datacenter
-func getPriorityDataCenterForCandidate(replicas [](*Instance)) (priorityDataCenter string, err error) {
+func getPriorityDataCenterForCandidate(replicas [](*Instance) (priorityDataCenter string, err error) {
 	if len(replicas) == 0 {
 		return "", log.Errorf("empty replicas list in priorityDataCenter")
 	}
@@ -2219,7 +2219,7 @@ func getPriorityDataCenterForCandidate(replicas [](*Instance)) (priorityDataCent
 }
 
 // return give replica datacenter is matched
-func IsDataCenterCandidateReplica(priorityDataCenter string, replica *Instance) bool {
+func IsDataCenterCandidateReplica(priorityDataCenter, string, replica *Instance) nool {
 	if priorityDataCenter == "Y" {
 		log.Debugf("instance %v is banned because of promotion rule", replica.Key)
 		return true
