@@ -187,6 +187,20 @@ Exec_Master_Log_Pos记录的是SQL thread执行到master binlog的文件和位�
 这里就是用到了配置文件中配置的账号和密码： MySQLTopologyUser、 MySQLTopologyPassword，所以在原来权限的基础上，要把alter、insert、update、delete权限加上去。
 ```
 
+这部分代码后续会以C++编译成二进制可执行文件出现，原理：
+```bash
+伪装成一个slave，从master拿到binlog的stream流文件，如果没有触发切换，就舍弃掉前面获取的binlog，如果orchestrator触发了切换，则执行该程序，拿到Exec_Master_Log_Pos后续的日志内容
+```
+
+如何伪装？
+```bash
+实现了一个mysql协议，去连接到master，获取binlog日志
+```
+
+如何实现数据应用？
+```bash
+通过拿到binlig的stream流文件，解析到十六进制格式的内容，通过结构体转换成对应的字段。重新实现一遍各类型的从十六进制存储到前端显示的数据
+```
 
 六、 **orchestrator-client改进** 
 
